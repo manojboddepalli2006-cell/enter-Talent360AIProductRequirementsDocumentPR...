@@ -59,13 +59,14 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
     <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Brand */}
       <div className={cn("flex items-center gap-2.5 px-4 py-5", collapsed && "justify-center px-2")}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-[13px] font-extrabold text-accent-foreground">
-          T3
+        <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-brand text-[13px] font-extrabold text-primary-foreground shadow-glow">
+          <span aria-hidden className="absolute inset-0 bg-gradient-brand bg-[length:200%_200%] animate-gradient-shift" />
+          <span className="relative">T3</span>
         </span>
         {!collapsed ? (
           <div className="min-w-0">
             <div className="truncate text-[15px] font-extrabold text-sidebar-accent-foreground">Talent360 AI</div>
-            <div className="truncate text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground">
+            <div className="truncate text-[10.5px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground">
               Workforce Intelligence
             </div>
           </div>
@@ -131,10 +132,10 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
                       title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-colors",
+                          "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-all duration-200",
                           collapsed && "justify-center px-2",
                           isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            ? "bg-gradient-brand text-primary-foreground shadow-glow"
                             : "text-sidebar-foreground hover:bg-sidebar-elevated hover:text-sidebar-accent-foreground",
                         )
                       }

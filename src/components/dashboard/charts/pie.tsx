@@ -28,7 +28,7 @@ export function CategoryPie({ data, height = 180, showCallouts = true, className
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <div className="relative w-full" style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 200 }}>
           <PieChart>
             <Pie data={usable} dataKey="value" nameKey="name" outerRadius="92%" stroke="none">
               {usable.map((entry, index) => (

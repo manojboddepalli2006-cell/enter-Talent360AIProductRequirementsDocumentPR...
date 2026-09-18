@@ -3,12 +3,13 @@ import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TONE_ICON, type Tone } from "@/lib/domain";
 import { StatusPill } from "@/components/common/status-pill";
+import { useAnimatedNumber } from "@/hooks/use-animated-number";
 
 export type DeltaDirection = "up" | "down" | "flat";
 
 interface KpiTileProps {
   label: string;
-  value: string;
+  value: string | number;
   icon: LucideIcon;
   tone?: Tone;
   delta?: {
@@ -37,9 +38,8 @@ export function KpiTile({
   className,
 }: KpiTileProps) {
   const DeltaIcon = delta ? DIRECTION_ICON[delta.direction] : null;
+  const animatedValue = useAnimatedNumber(value);
 
-  // "Good" depends on the metric: a falling attrition count is good, a falling
-  // headcount is not. `invert` lets the caller declare which way is good.
   const isGood =
     delta === undefined
       ? false
@@ -52,19 +52,38 @@ export function KpiTile({
   const deltaTone: Tone = delta?.direction === "flat" ? "neutral" : isGood ? "success" : "danger";
 
   return (
-    <div className={cn("talent-tile p-4 shadow-card", className)}>
-      <div className="flex items-start gap-2.5">
-        <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", TONE_ICON[tone])}>
+    <div
+      className={cn(
+        "talent-tile talent-tile-hover group relative flex flex-col gap-3 overflow-hidden p-4",
+        className,
+      )}
+    >
+      {/* Soft gradient wash that appears on hover */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          backgroundImage: `radial-gradient(circle, hsl(var(--primary) / 0.16), transparent 70%)`,
+        }}
+      />
+
+      <div className="flex items-center gap-2.5">
+        <span
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/[0.03] transition-transform duration-200 group-hover:scale-105",
+            TONE_ICON[tone],
+          )}
+        >
           <Icon className="h-4 w-4" />
         </span>
         <span className="text-[12px] font-semibold leading-tight text-muted-foreground">{label}</span>
       </div>
 
-      <div className="mt-3 text-[26px] font-extrabold leading-none tracking-tight text-foreground">
-        {value}
+      <div className="text-[27px] font-extrabold leading-none tracking-tight text-foreground tabular-nums">
+        {animatedValue}
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
+      <div className="flex items-center gap-2">
         {delta && DeltaIcon ? (
           <StatusPill tone={deltaTone} icon={<DeltaIcon className="h-3 w-3" />}>
             {delta.value}

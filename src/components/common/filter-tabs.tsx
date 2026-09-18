@@ -27,7 +27,7 @@ export function FilterTabs({ items, value, onChange, className }: FilterTabsProp
             aria-selected={active}
             onClick={() => onChange(item.key)}
             className={cn(
-              "relative shrink-0 whitespace-nowrap px-3 pb-2.5 pt-2 text-[13px] font-semibold transition-colors",
+              "relative shrink-0 whitespace-nowrap px-3 pb-2.5 pt-2 text-[13px] font-semibold transition-all duration-200",
               active ? "text-primary" : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -35,7 +35,7 @@ export function FilterTabs({ items, value, onChange, className }: FilterTabsProp
             {typeof item.count === "number" ? (
               <span
                 className={cn(
-                  "ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                  "ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold transition-colors",
                   active ? "bg-primary-soft text-primary-soft-foreground" : "bg-muted text-muted-foreground",
                 )}
               >
@@ -43,7 +43,7 @@ export function FilterTabs({ items, value, onChange, className }: FilterTabsProp
               </span>
             ) : null}
             {active ? (
-              <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />
+              <span className="absolute inset-x-2 -bottom-px h-[3px] rounded-full bg-gradient-brand shadow-glow" />
             ) : null}
           </button>
         );

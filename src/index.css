@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
-  Talent360 AI design tokens.
+  Talent360 AI design tokens — premium edition.
   Light canvas + permanently dark sidebar, matching the reference admin shell.
   Every colour used by a component must resolve through one of these tokens.
 */
@@ -58,7 +58,7 @@
     --input: 214 32% 93%;
     --ring: 262 83% 58%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --chart-1: 262 83% 58%;
     --chart-2: 217 91% 60%;
@@ -67,26 +67,43 @@
     --chart-5: 160 84% 39%;
 
     /* Sidebar stays dark in both themes, as in the reference shell. */
-    --sidebar-background: 222 29% 10%;
-    --sidebar-foreground: 217 13% 61%;
-    --sidebar-primary: 262 83% 58%;
+    --sidebar-background: 226 32% 9%;
+    --sidebar-foreground: 217 14% 62%;
+    --sidebar-primary: 262 83% 66%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 22% 19%;
+    --sidebar-accent: 228 26% 17%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 222 22% 16%;
-    --sidebar-ring: 262 83% 58%;
-    --sidebar-elevated: 228 28% 16%;
-    --sidebar-muted: 230 24% 22%;
+    --sidebar-border: 226 24% 14%;
+    --sidebar-ring: 262 83% 66%;
+    --sidebar-elevated: 228 26% 14%;
+    --sidebar-muted: 229 25% 20%;
+
+    /* Premium surfaces */
+    --gradient-brand: linear-gradient(135deg, hsl(262 83% 56%), hsl(283 74% 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(330 81% 58%), hsl(347 83% 60%));
+    --gradient-warm: linear-gradient(135deg, hsl(38 92% 50%), hsl(24 94% 54%));
+    --gradient-cool: linear-gradient(135deg, hsl(217 91% 58%), hsl(262 83% 60%));
+    --gradient-canvas:
+      radial-gradient(58% 42% at 12% -4%, hsl(262 83% 58% / 0.07), transparent 70%),
+      radial-gradient(46% 38% at 104% 8%, hsl(330 81% 60% / 0.07), transparent 70%),
+      radial-gradient(50% 40% at 50% 108%, hsl(217 91% 60% / 0.05), transparent 70%);
+
+    --shadow-card: 0 1px 2px 0 hsl(222 47% 11% / 0.05), 0 2px 8px -2px hsl(222 47% 11% / 0.05);
+    --shadow-card-hover:
+      0 1px 2px 0 hsl(222 47% 11% / 0.04),
+      0 18px 40px -16px hsl(262 70% 48% / 0.22);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.14), 0 10px 40px -10px hsl(var(--primary) / 0.5);
+    --shadow-panel: 0 24px 64px -24px hsl(222 47% 11% / 0.28);
   }
 
   .dark {
-    --background: 222 45% 6%;
+    --background: 224 42% 6%;
     --foreground: 210 40% 98%;
 
-    --card: 222 40% 9%;
+    --card: 224 38% 9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 40% 10%;
+    --popover: 224 38% 11%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 262 83% 66%;
@@ -94,10 +111,10 @@
     --primary-soft: 263 45% 20%;
     --primary-soft-foreground: 263 90% 84%;
 
-    --secondary: 222 32% 15%;
+    --secondary: 224 32% 15%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 222 32% 15%;
+    --muted: 224 32% 15%;
     --muted-foreground: 215 20% 66%;
 
     --accent: 330 81% 64%;
@@ -125,8 +142,8 @@
     --info-soft: 217 40% 20%;
     --info-soft-foreground: 214 95% 82%;
 
-    --border: 222 28% 17%;
-    --input: 222 28% 20%;
+    --border: 224 28% 16%;
+    --input: 224 28% 19%;
     --ring: 262 83% 66%;
 
     --chart-1: 262 83% 68%;
@@ -135,13 +152,27 @@
     --chart-4: 38 92% 60%;
     --chart-5: 160 70% 50%;
 
-    --sidebar-background: 222 33% 8%;
-    --sidebar-foreground: 217 13% 64%;
-    --sidebar-accent: 225 22% 17%;
+    --sidebar-background: 226 36% 7%;
+    --sidebar-foreground: 217 14% 64%;
+    --sidebar-accent: 227 26% 15%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 222 22% 14%;
-    --sidebar-elevated: 228 28% 14%;
-    --sidebar-muted: 230 24% 20%;
+    --sidebar-border: 226 24% 12%;
+    --sidebar-elevated: 228 26% 13%;
+    --sidebar-muted: 229 25% 18%;
+
+    --gradient-brand: linear-gradient(135deg, hsl(262 83% 60%), hsl(283 74% 64%));
+    --gradient-accent: linear-gradient(135deg, hsl(330 81% 62%), hsl(347 83% 64%));
+    --gradient-warm: linear-gradient(135deg, hsl(38 92% 52%), hsl(24 94% 58%));
+    --gradient-cool: linear-gradient(135deg, hsl(217 91% 62%), hsl(262 83% 64%));
+    --gradient-canvas:
+      radial-gradient(58% 42% at 12% -4%, hsl(262 83% 66% / 0.08), transparent 70%),
+      radial-gradient(46% 38% at 104% 8%, hsl(330 81% 64% / 0.08), transparent 70%),
+      radial-gradient(50% 40% at 50% 108%, hsl(217 91% 64% / 0.06), transparent 70%);
+
+    --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.4), 0 2px 10px -2px hsl(0 0% 0% / 0.35);
+    --shadow-card-hover: 0 1px 2px 0 hsl(0 0% 0% / 0.3), 0 18px 44px -16px hsl(262 70% 55% / 0.35);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.2), 0 10px 44px -10px hsl(var(--primary) / 0.45);
+    --shadow-panel: 0 24px 64px -24px hsl(0 0% 0% / 0.6);
   }
 }
 
@@ -150,9 +181,16 @@
     @apply border-border;
   }
 
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-image: var(--gradient-canvas);
+    background-attachment: fixed;
   }
 
   h1,
@@ -161,21 +199,54 @@
   h4 {
     @apply tracking-tight;
   }
+
+  button:focus-visible,
+  a:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.55);
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
 }
 
 @layer components {
-  /* 11px uppercase tracked label used by table headers and KPI captions. */
   .talent-label {
-    @apply text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground;
+    @apply text-[11px] font-bold uppercase tracking-[0.09em] text-muted-foreground;
   }
 
   .talent-chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold leading-none;
   }
 
-  /* Soft tinted surface used by KPI icon tiles and chart legends. */
   .talent-tile {
-    @apply rounded-xl border border-border bg-card;
+    @apply rounded-2xl border border-border bg-card;
+    box-shadow: var(--shadow-card);
+  }
+
+  .talent-tile-hover {
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.25s ease;
+  }
+
+  .talent-tile-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: hsl(var(--primary) / 0.18);
+  }
+
+  .talent-gradient-text {
+    background-image: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .talent-glass {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
   }
 }
 
@@ -186,17 +257,15 @@ body,
   height: 100%;
 }
 
-/* Slim scrollbars inside the dark sidebar and scrollable panels. */
+/* Slim scrollbars. */
 .talent-scroll {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--border)) transparent;
 }
-
 .talent-scroll::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 .talent-scroll::-webkit-scrollbar-thumb {
   background: hsl(var(--border));
   border-radius: 999px;
@@ -206,18 +275,21 @@ body,
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--sidebar-muted)) transparent;
 }
-
 .talent-sidebar-scroll::-webkit-scrollbar {
   width: 5px;
 }
-
 .talent-sidebar-scroll::-webkit-scrollbar-thumb {
   background: hsl(var(--sidebar-muted));
   border-radius: 999px;
 }
 
-/* Recharts leaves focus rings on click; keep the chart surface clean. */
 .recharts-wrapper svg:focus,
 .recharts-surface:focus {
   outline: none;
+}
+
+/* Recharts first-paint guard: never measure the chart at 0×0. */
+.recharts-responsive-container {
+  min-width: 0;
+  min-height: 0;
 }

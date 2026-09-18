@@ -5,20 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 /**
- * Variants are built from design tokens only. `soft` and `soft-destructive`
- * cover the compact pill actions used in table rows, so row actions never need
- * an inline override.
+ * Variants are built from design tokens only. `default` carries the brand
+ * gradient so the primary action reads as the premium surface of the product.
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-bold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.985] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default:
+          "bg-gradient-brand text-primary-foreground shadow-glow hover:shadow-card-hover hover:brightness-110",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-input bg-card text-foreground hover:bg-muted hover:text-foreground",
+          "border border-input bg-card text-foreground shadow-sm hover:border-primary/40 hover:bg-primary-soft/40 hover:text-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
@@ -29,7 +29,7 @@ const buttonVariants = cva(
         "soft-success": "bg-success-soft text-success-soft-foreground hover:bg-success-soft/70",
       },
       size: {
-        default: "h-9 px-3.5 text-[13px]",
+        default: "h-9 px-4 text-[13px]",
         sm: "h-8 px-3 text-[12px]",
         lg: "h-10 px-5 text-[14px]",
         icon: "h-9 w-9",

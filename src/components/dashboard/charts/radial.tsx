@@ -22,7 +22,7 @@ export function RadialDial({ percent, caption, subcaption, className }: RadialDi
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <div className="relative h-[170px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 200 }}>
           <PieChart>
             <Pie
               data={segments}

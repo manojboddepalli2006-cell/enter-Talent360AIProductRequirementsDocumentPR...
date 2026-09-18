@@ -28,8 +28,20 @@ export function RecommendationCard({ recommendation, reviewerName, onDecide }: R
     [recommendation.employeeTitle, recommendation.jobTitle].filter(Boolean).join(" · ") || null;
   const isPending = recommendation.status === "pending";
 
+  const highRisk = recommendation.module === "monitor" && recommendation.structured?.confidence !== null
+    ? (recommendation.structured?.confidence ?? 0) >= 0.75
+    : false;
+
   return (
-    <article className="talent-tile flex flex-col gap-4 p-5 shadow-card">
+    <article
+      className="talent-tile talent-tile-hover relative flex flex-col gap-4 overflow-hidden p-5"
+    >
+      {highRisk ? (
+        <span
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-[3px] bg-gradient-accent"
+        />
+      ) : null}
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -117,6 +129,6 @@ export function RecommendationCard({ recommendation, reviewerName, onDecide }: R
           ) : null}
         </div>
       )}
-    </article>
+        </article>
   );
 }

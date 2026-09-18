@@ -7,17 +7,33 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({ label = "Loading", className }: LoadingStateProps) {
+/** Shimmering skeleton block used while a surface streams its data in. */
+export function SkeletonBlock({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center justify-center gap-2 py-10 text-muted-foreground", className)}>
-      <Loader2 className="h-4 w-4 animate-spin" />
-      <span className="text-[13px] font-medium">{label}…</span>
-    </div>
+    <div
+      className={cn(
+        "talent-tile animate-pulse overflow-hidden rounded-2xl bg-muted/50",
+        className,
+      )}
+    />
   );
 }
 
-export function SkeletonCard({ className }: { className?: string }) {
-  return <div className={cn("talent-tile h-32 animate-pulse bg-muted/60", className)} />;
+export function LoadingState({ label = "Loading", className }: LoadingStateProps) {
+  return (
+    <div className={cn("flex flex-col gap-4", className)} role="status" aria-label={label}>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <SkeletonBlock key={`kpi-${index}`} className="h-[118px]" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <SkeletonBlock key={`card-${index}`} className="h-[280px]" />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 interface ErrorStateProps {
@@ -39,7 +55,7 @@ export function ErrorState({ title = "Something went wrong", message, onRetry, c
         <button
           type="button"
           onClick={onRetry}
-          className="mt-1 rounded-lg bg-primary px-3 py-1.5 text-[12px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+          className="mt-1 rounded-xl bg-gradient-brand px-3.5 py-1.5 text-[12px] font-bold text-primary-foreground shadow-glow transition-transform active:scale-[0.98]"
         >
           Try again
         </button>
@@ -60,12 +76,12 @@ export function EmptyState({ icon, title, description, action, className }: Empt
   return (
     <div
       className={cn(
-        "talent-tile flex flex-col items-center justify-center gap-2 px-6 py-12 text-center",
+        "talent-tile flex flex-col items-center justify-center gap-2.5 px-6 py-12 text-center",
         className,
       )}
     >
       {icon ? (
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-muted-foreground ring-1 ring-inset ring-border">
           {icon}
         </span>
       ) : null}

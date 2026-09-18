@@ -20,7 +20,7 @@ export function GaugeChart({ percent, caption, remainderLabel, className }: Gaug
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <div className="relative h-[150px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 200 }}>
           <PieChart>
             <Pie
               data={data}

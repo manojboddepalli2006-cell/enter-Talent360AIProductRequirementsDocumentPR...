@@ -26,7 +26,7 @@ export function SkillRadar({ data, height = 260, className }: SkillRadarProps) {
 
   return (
     <div className={cn("w-full", className)} style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 200 }}>
         <RadarChart data={data} outerRadius="72%">
           <PolarGrid stroke="hsl(var(--border))" />
           <PolarAngleAxis

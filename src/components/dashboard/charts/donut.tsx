@@ -28,7 +28,7 @@ export function DonutChart({ data, centerValue, centerLabel, height = 200, class
   return (
     <div className={cn("flex flex-col", className)}>
       <div className="relative" style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 200 }}>
           <PieChart>
             <Pie
               data={usable}

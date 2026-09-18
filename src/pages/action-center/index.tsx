@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -257,16 +258,28 @@ export default function ActionCenterPage() {
         />
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+        className="grid grid-cols-1 gap-4 xl:grid-cols-2"
+      >
         {visible.map((recommendation) => (
-          <RecommendationCard
+          <motion.div
             key={recommendation.id}
-            recommendation={recommendation}
-            reviewerName={recommendation.reviewed_by ? reviewerNames[recommendation.reviewed_by] ?? null : null}
-            onDecide={(mode) => handleDecide(recommendation, mode)}
-          />
+            variants={{
+              hidden: { opacity: 0, y: 14 },
+              show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } },
+            }}
+          >
+            <RecommendationCard
+              recommendation={recommendation}
+              reviewerName={recommendation.reviewed_by ? reviewerNames[recommendation.reviewed_by] ?? null : null}
+              onDecide={(mode) => handleDecide(recommendation, mode)}
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       <DecisionDialog
         key={`${dialogMode ?? "closed"}-${active?.id ?? "none"}`}

@@ -20,6 +20,8 @@ interface ChartCardProps {
   children: ReactNode;
   className?: string;
   bodyClassName?: string;
+  /** Disables the hover lift for cards that are interactive themselves. */
+  noHover?: boolean;
 }
 
 /** White analytical card: title, muted subtitle, overflow menu, chart body. */
@@ -30,12 +32,19 @@ export function ChartCard({
   children,
   className,
   bodyClassName,
+  noHover,
 }: ChartCardProps) {
   return (
-    <section className={cn("talent-tile flex flex-col p-5 shadow-card", className)}>
+    <section
+      className={cn(
+        "talent-tile talent-tile-hover flex flex-col p-5",
+        noHover && "hover:translate-y-0 hover:shadow-card hover:border-border",
+        className,
+      )}
+    >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[14px] font-bold text-foreground">{title}</h3>
+          <h3 className="truncate text-[14px] font-extrabold text-foreground">{title}</h3>
           {subtitle ? (
             <p className="mt-0.5 line-clamp-2 text-[11px] font-medium leading-snug text-muted-foreground">
               {subtitle}
@@ -62,7 +71,7 @@ export function ChartCard({
         ) : null}
       </header>
 
-      <div className={cn("mt-4 flex-1", bodyClassName)}>{children}</div>
+      <div className={cn("mt-4 min-w-0 flex-1", bodyClassName)}>{children}</div>
     </section>
   );
 }
