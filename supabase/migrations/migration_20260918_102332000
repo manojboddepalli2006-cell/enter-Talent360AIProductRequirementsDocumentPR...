@@ -1,0 +1,19 @@
+-- Removes the three throwaway organisations and accounts created while verifying the
+-- demo seeder. These are not part of the deliverable: each was created minutes ago
+-- by a verification run (signed up with mode='new' so the seeder had a fresh org to
+-- target), and none of them is reachable from the demo workspace. The shared
+-- Talent360 Demo Corp organisation and its four demo logins are untouched.
+--
+-- Rows are removed by name, and the demo org is additionally excluded by is_demo,
+-- so it can never be caught by this statement.
+
+delete from public.talent_orgs
+where is_demo = false
+  and name in ('Northwind Test Group', 'Fresh Check Group', 'Verify Three Group');
+
+delete from auth.users
+where email in (
+  'neworg.demo@talent360.demo',
+  'freshcheck.demo@talent360.demo',
+  'verify3.demo@talent360.demo'
+);

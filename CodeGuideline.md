@@ -9,15 +9,38 @@ project-root/
   │   └── locales/           # public/locales/{code}.json translation files
   ├── src/
   │   ├── components/        # All reusable UI components
-  │   │   └── ui/            # Prebuilt and custom UI components, grouped by function
+  │   │   ├── ui/            # Prebuilt and custom UI components, grouped by function
+  │   │   ├── layout/        # Application chrome: app-shell, app-sidebar, app-topbar,
+  │   │   │                  #   nav-config, command-palette
+  │   │   ├── common/        # Cross-module primitives: kpi-tile, chart-card, status-pill,
+  │   │   │                  #   filter-tabs, page-header, user-cell, reasoning-panel, states
+  │   │   ├── auth/          # auth-provider, auth-context, auth-layout, require-auth, require-role
+  │   │   └── dashboard/     # chart-theme + charts/ (donut, pie, bars, gauge, radial,
+  │   │                      #   sparkline, area, progress-list)
   │   ├── hooks/             # Custom React hooks
   │   ├── i18n/              # i18n runtime: config.ts (entry) + util.ts (helpers)
   │   ├── lib/               # Utility functions and libraries
+  │   │   └── api/           # Per-domain query modules over Enter Cloud
+  │   │                      #   (command-center, actions, recruitment, people)
   │   ├── pages/             # Application pages (each page in its own subdirectory)
+  │   │   ├── auth/          # login, signup
+  │   │   ├── app/           # role-redirect: landing route per role
+  │   │   └── ...            # one subdirectory per module (command-center, action-center,
+  │   │                      #   recruitment, interviews, employees, team, risk, skills,
+  │   │                      #   development, onboarding, tasks, my-profile, copilot,
+  │   │                      #   policies, decision-log, admin, settings)
   │   ├── App.tsx            # Main app component, sets up route providers
   │   ├── router.tsx         # Router config, sets up routing
   │   ├── main.tsx           # Entry point for the React app
-  │   └── index.css          # Global styles
+  │   └── index.css          # Global styles and design tokens
+  ├── supabase/
+  │   └── functions/         # Enter Cloud backend functions, one responsibility each
+  │       ├── talent-ai-resume-match/
+  │       ├── talent-ai-interview/
+  │       ├── talent-ai-risk/
+  │       ├── talent-ai-development/
+  │       ├── talent-ai-copilot/
+  │       └── talent-seed-demo/
   ├── package.json           # Project metadata and scripts
   ├── tailwind.config.ts     # Tailwind CSS configuration
   └── ...                    # Other config and lock files
@@ -33,14 +56,23 @@ project-root/
 - **src/components/**: All UI components.  
   - **ui/**: Contains atomic and composite UI components.  
   - *Group related components into subdirectories if they share a domain or feature (e.g., `form/`, `charts/`).*
+  - **layout/**: Application shell only — sidebar, topbar, navigation config and the command palette.
+  - **common/**: Primitives shared by two or more modules. If a component is used by one page, it belongs in that page's directory instead.
+  - **auth/**: Session provider, context, auth screens shell and the route guards.
+  - **dashboard/**: Chart theme constants and one file per chart family. Chart colours resolve through the `--chart-*` tokens, never literals.
 - **src/hooks/**: Custom React hooks. Each file should export a single hook focused on one responsibility.
+  - `use-auth-context` reads the raw context; `use-session` and `use-profile` are the narrower views most components should use.
+  - `use-permissions` maps a role to capabilities. It is a UI convenience only — the same boundaries are enforced by row level security.
 - **src/i18n/**: Two files only.
   - `config.ts` is the runtime entry: imports the manifest via `util.ts`, initializes i18next (HTTP backend, language detector, react binding), syncs `<html lang/dir>`, and re-exports the helpers. Importing this file for its side effect boots i18next.
   - `util.ts` holds pure helpers parsed from the manifest: `fallbackLng`, `supportedLngs`, `languageOptions`, `normalizeLanguage`, `getLanguageDirection`, plus types.
   - Components use the official `useTranslation()` from `react-i18next` directly; there is no project-specific `useT` wrapper.
 - **src/lib/**: Utility functions and libraries that are not React components or hooks.
+  - **lib/api/**: One module per domain (`command-center`, `actions`, `recruitment`, `people`). Data access belongs here or in the page that owns it — never inline in a shared component.
+  - `domain.ts` holds vocabulary (roles, stages, tones, labels). `format.ts`, `csv.ts`, `ai-parse.ts` and `extraction.ts` hold pure helpers.
 - **src/pages/**: All route-level pages.  
   - *Each page should have its own subdirectory if it contains more than a single file or has related logic/components.*
+- **supabase/functions/**: One directory per backend function, each with a single responsibility. They run with the caller's credentials, so row level security still applies.
 - **src/App.tsx**: Sets up global providers.
 - **src/router.tsx**: Sets up routing.
 - **src/main.tsx**: Application entry point.

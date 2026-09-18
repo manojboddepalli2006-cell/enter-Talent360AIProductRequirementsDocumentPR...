@@ -1,0 +1,59 @@
+-- Retrieval fix. websearch_to_tsquery joins terms with AND, so a question that
+-- spans two policy sections matched nothing at all. Terms are now OR-combined for
+-- recall and ranked by ts_rank, with a lexical fallback when full-text finds nothing.
+
+create or replace function public.talent_search_policy_chunks(query_text text, match_count integer default 6)
+returns table (chunk_id uuid, document_id uuid, document_title text, section text, chunk_text text, rank real)
+language sql stable security definer set search_path = public, pg_temp
+as $$
+  with raw_words as (
+    select distinct regexp_replace(lower(word), '[^a-z0-9]', '', 'g') as word
+    from unnest(string_to_array(coalesce(query_text, ''), ' ')) as word
+  ),
+  words as (
+    select word from raw_words
+    where char_length(word) >= 4
+      and word not in (
+        'what','when','where','which','with','this','that','they','them','their','there',
+        'have','has','had','does','dont','from','into','over','under','about','your',
+        'yours','ours','many','much','some','more','most','less','must','should','would',
+        'could','than','then','also','been','being','were','are','will','shall','after',
+        'before','while','during','between','please','tell'
+      )
+  ),
+  tsq as (
+    select string_agg(word, ' | ') as q from words
+  ),
+  fts as (
+    select c.id as chunk_id, c.document_id, d.title as document_title, c.section, c.chunk_text,
+           ts_rank(c.search_vector, to_tsquery('english', tsq.q)) as rank,
+           0 as tier
+    from public.talent_policy_chunks c
+    join public.talent_policy_documents d on d.id = c.document_id
+    cross join tsq
+    where c.org_id = public.talent_current_org_id()
+      and tsq.q is not null
+      and c.search_vector @@ to_tsquery('english', tsq.q)
+  ),
+  lexical as (
+    select c.id as chunk_id, c.document_id, d.title as document_title, c.section, c.chunk_text,
+           ((select count(*)::real from words w where c.chunk_text ilike ('%' || w.word || '%')) / 100.0) as rank,
+           1 as tier
+    from public.talent_policy_chunks c
+    join public.talent_policy_documents d on d.id = c.document_id
+    where c.org_id = public.talent_current_org_id()
+      and exists (select 1 from words w where c.chunk_text ilike ('%' || w.word || '%'))
+      and not exists (select 1 from fts f where f.chunk_id = c.id)
+  )
+  select combined.chunk_id, combined.document_id, combined.document_title,
+         combined.section, combined.chunk_text, combined.rank
+  from (
+    select * from fts
+    union all
+    select * from lexical
+  ) as combined
+  order by combined.tier, combined.rank desc
+  limit greatest(1, least(coalesce(match_count, 6), 20));
+$$;
+
+grant execute on function public.talent_search_policy_chunks(text, integer) to authenticated;

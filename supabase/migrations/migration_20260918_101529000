@@ -1,0 +1,119 @@
+-- Signup completion moves into the database.
+-- The insert is fine, but a RETURNING clause is checked against the SELECT policy,
+-- and that policy calls a STABLE helper that cannot see the row inserted by the
+-- same statement -- so creating a workspace must happen in one server-side step.
+
+create or replace function public.talent_complete_signup(
+  p_full_name text,
+  p_role text,
+  p_org_name text default null,
+  p_join_org_id uuid default null
+)
+returns uuid
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_email text;
+  v_org uuid;
+  v_emp uuid;
+  v_manager uuid;
+  v_demo boolean;
+  v_role text;
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated.';
+  end if;
+
+  select email into v_email from auth.users where id = v_uid;
+  if v_email is null then
+    raise exception 'The signed-in account could not be resolved.';
+  end if;
+
+  v_role := case when p_role in ('org_admin', 'hr_admin', 'manager', 'employee') then p_role else 'employee' end;
+
+  select org_id into v_org from public.talent_profiles where id = v_uid;
+
+  if v_org is null then
+    if p_join_org_id is not null then
+      v_org := p_join_org_id;
+    else
+      insert into public.talent_orgs (name, is_demo)
+      values (coalesce(nullif(trim(p_org_name), ''), 'My Organization'), false)
+      returning id into v_org;
+    end if;
+
+    insert into public.talent_profiles (id, org_id, email, full_name, role)
+    values (
+      v_uid,
+      v_org,
+      v_email,
+      coalesce(nullif(trim(p_full_name), ''), v_email),
+      v_role
+    );
+  end if;
+
+  -- Claim a matching seeded person, otherwise create one for this account.
+  select id into v_emp from public.talent_employees
+   where org_id = v_org and user_id is null and lower(email) = lower(v_email)
+   order by created_at
+   limit 1;
+
+  if v_emp is not null then
+    update public.talent_employees
+       set user_id = v_uid,
+           full_name = coalesce(nullif(trim(p_full_name), ''), full_name)
+     where id = v_emp;
+  else
+    select id into v_emp from public.talent_employees where user_id = v_uid limit 1;
+
+    if v_emp is null then
+      insert into public.talent_employees
+        (org_id, user_id, full_name, email, role_title, seniority, status, hire_date)
+      values (
+        v_org,
+        v_uid,
+        coalesce(nullif(trim(p_full_name), ''), v_email),
+        v_email,
+        case v_role
+          when 'org_admin' then 'Organization Administrator'
+          when 'hr_admin' then 'HR Manager'
+          when 'manager' then 'People Manager'
+          else 'Team Member' end,
+        case v_role
+          when 'org_admin' then 'Executive'
+          when 'hr_admin' then 'Lead'
+          when 'manager' then 'Manager'
+          else 'Associate' end,
+        'active',
+        current_date
+      )
+      returning id into v_emp;
+
+      select is_demo into v_demo from public.talent_orgs where id = v_org;
+
+      if coalesce(v_demo, false) then
+        if v_role = 'employee' then
+          select id into v_manager from public.talent_employees
+            where org_id = v_org and lower(email) = 'manager@talent360.demo' limit 1;
+        elsif v_role = 'hr_admin' then
+          select id into v_manager from public.talent_employees
+            where org_id = v_org and lower(email) = 'admin@talent360.demo' limit 1;
+        end if;
+
+        if v_manager is not null then
+          update public.talent_employees set manager_id = v_manager where id = v_emp;
+        end if;
+      end if;
+    end if;
+  end if;
+
+  return v_org;
+end; $$;
+
+grant execute on function public.talent_complete_signup(text, text, text, uuid) to authenticated;
+
+-- The client no longer inserts organisations directly; creating a workspace is
+drop policy if exists talent_orgs_insert on public.talent_orgs;
+create policy talent_orgs_insert on public.talent_orgs for insert to authenticated
+  with check (public.talent_current_org_id() = id);

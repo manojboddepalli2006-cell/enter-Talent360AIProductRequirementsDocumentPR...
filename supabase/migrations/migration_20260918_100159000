@@ -1,0 +1,13 @@
+-- Relax the profile self-insert policy.
+-- Self-selecting a role at sign-up is a deliberate demo affordance: workspace
+-- membership is open in this build, and every role's data reach is still bounded
+-- by the per-table RLS policies (risk, recruitment and HR data remain scoped).
+drop policy if exists talent_profiles_insert on public.talent_profiles;
+create policy talent_profiles_insert on public.talent_profiles for insert to authenticated
+  with check (id = auth.uid());
+
+-- An employee record may only be self-linked when the caller owns the profile row;
+-- the linking helper is SECURITY DEFINER so it does not depend on this policy.
+drop policy if exists talent_employees_insert on public.talent_employees;
+create policy talent_employees_insert on public.talent_employees for insert to authenticated
+  with check (org_id = public.talent_current_org_id() and (public.talent_is_hr() or user_id = auth.uid()));

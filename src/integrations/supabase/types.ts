@@ -3360,13 +3360,1620 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      talent_ai_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          kind: string
+          org_id: string
+          payload: Json
+          processed: number
+          progress: number
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          payload?: Json
+          processed?: number
+          progress?: number
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          payload?: Json
+          processed?: number
+          progress?: number
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_ai_jobs_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_ai_jobs_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_ai_recommendations: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          employee_id: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          modified_payload: Json | null
+          module: string
+          org_id: string
+          recommendation: Json
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          employee_id?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          modified_payload?: Json | null
+          module: string
+          org_id: string
+          recommendation?: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          employee_id?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          modified_payload?: Json | null
+          module?: string
+          org_id?: string
+          recommendation?: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_ai_recommendations_application_id_fkey"
+            columns: ["application_id"]
+            referencedRelation: "talent_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_ai_recommendations_employee_id_fkey"
+            columns: ["employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_ai_recommendations_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_ai_recommendations_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_ai_usage: {
+        Row: {
+          completion_tokens: number
+          cost_estimate: number
+          created_at: string
+          function_name: string
+          id: string
+          latency_ms: number | null
+          model: string
+          org_id: string
+          prompt_tokens: number
+          provider: string
+          status: string
+          total_tokens: number
+        }
+        Insert: {
+          completion_tokens?: number
+          cost_estimate?: number
+          created_at?: string
+          function_name: string
+          id?: string
+          latency_ms?: number | null
+          model: string
+          org_id: string
+          prompt_tokens?: number
+          provider?: string
+          status?: string
+          total_tokens?: number
+        }
+        Update: {
+          completion_tokens?: number
+          cost_estimate?: number
+          created_at?: string
+          function_name?: string
+          id?: string
+          latency_ms?: number | null
+          model?: string
+          org_id?: string
+          prompt_tokens?: number
+          provider?: string
+          status?: string
+          total_tokens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_ai_usage_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_applications: {
+        Row: {
+          ai_match_breakdown: Json | null
+          ai_match_score: number | null
+          bias_flags: Json | null
+          candidate_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          job_posting_id: string
+          org_id: string
+          stage: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_match_breakdown?: Json | null
+          ai_match_score?: number | null
+          bias_flags?: Json | null
+          candidate_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          job_posting_id: string
+          org_id: string
+          stage?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_match_breakdown?: Json | null
+          ai_match_score?: number | null
+          bias_flags?: Json | null
+          candidate_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          job_posting_id?: string
+          org_id?: string
+          stage?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_applications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            referencedRelation: "talent_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_applications_decided_by_fkey"
+            columns: ["decided_by"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_applications_job_posting_id_fkey"
+            columns: ["job_posting_id"]
+            referencedRelation: "talent_job_postings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_applications_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          org_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+          org_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_audit_log_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_candidates: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          location: string | null
+          org_id: string
+          parsed_profile: Json | null
+          phone: string | null
+          resume_file_url: string | null
+          resume_text: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          location?: string | null
+          org_id: string
+          parsed_profile?: Json | null
+          phone?: string | null
+          resume_file_url?: string | null
+          resume_text?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          location?: string | null
+          org_id?: string
+          parsed_profile?: Json | null
+          phone?: string | null
+          resume_file_url?: string | null
+          resume_text?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_candidates_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_copilot_queries: {
+        Row: {
+          answer: string | null
+          cited_chunks: Json
+          confidence: number | null
+          created_at: string
+          escalated: boolean
+          id: string
+          org_id: string
+          question: string
+          user_id: string | null
+        }
+        Insert: {
+          answer?: string | null
+          cited_chunks?: Json
+          confidence?: number | null
+          created_at?: string
+          escalated?: boolean
+          id?: string
+          org_id: string
+          question: string
+          user_id?: string | null
+        }
+        Update: {
+          answer?: string | null
+          cited_chunks?: Json
+          confidence?: number | null
+          created_at?: string
+          escalated?: boolean
+          id?: string
+          org_id?: string
+          question?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_copilot_queries_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_copilot_queries_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_departments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+          parent_department_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+          parent_department_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+          parent_department_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_departments_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_departments_parent_department_id_fkey"
+            columns: ["parent_department_id"]
+            referencedRelation: "talent_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_employee_skills: {
+        Row: {
+          employee_id: string
+          id: string
+          org_id: string
+          proficiency: number
+          skill_id: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          employee_id: string
+          id?: string
+          org_id: string
+          proficiency?: number
+          skill_id: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          employee_id?: string
+          id?: string
+          org_id?: string
+          proficiency?: number
+          skill_id?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_employee_skills_employee_id_fkey"
+            columns: ["employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_employee_skills_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_employee_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            referencedRelation: "talent_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_employees: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          email: string | null
+          engagement_score: number | null
+          full_name: string
+          hire_date: string | null
+          id: string
+          location: string | null
+          manager_id: string | null
+          org_id: string
+          role_title: string
+          seniority: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          email?: string | null
+          engagement_score?: number | null
+          full_name: string
+          hire_date?: string | null
+          id?: string
+          location?: string | null
+          manager_id?: string | null
+          org_id: string
+          role_title?: string
+          seniority?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          email?: string | null
+          engagement_score?: number | null
+          full_name?: string
+          hire_date?: string | null
+          id?: string
+          location?: string | null
+          manager_id?: string | null
+          org_id?: string
+          role_title?: string
+          seniority?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_employees_department_id_fkey"
+            columns: ["department_id"]
+            referencedRelation: "talent_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_employees_manager_id_fkey"
+            columns: ["manager_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_employees_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_engagement_signals: {
+        Row: {
+          employee_id: string
+          id: string
+          org_id: string
+          recorded_at: string
+          source: string
+          value: number
+        }
+        Insert: {
+          employee_id: string
+          id?: string
+          org_id: string
+          recorded_at?: string
+          source?: string
+          value: number
+        }
+        Update: {
+          employee_id?: string
+          id?: string
+          org_id?: string
+          recorded_at?: string
+          source?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_engagement_signals_employee_id_fkey"
+            columns: ["employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_engagement_signals_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_integrations: {
+        Row: {
+          category: string
+          config: Json
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          notes: string | null
+          org_id: string
+          provider: string
+          status: string
+        }
+        Insert: {
+          category: string
+          config?: Json
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          notes?: string | null
+          org_id: string
+          provider: string
+          status?: string
+        }
+        Update: {
+          category?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          notes?: string | null
+          org_id?: string
+          provider?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_integrations_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_interview_questions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          interview_id: string
+          org_id: string
+          position: number
+          question_text: string
+          rubric: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          interview_id: string
+          org_id: string
+          position?: number
+          question_text: string
+          rubric?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          interview_id?: string
+          org_id?: string
+          position?: number
+          question_text?: string
+          rubric?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_interview_questions_interview_id_fkey"
+            columns: ["interview_id"]
+            referencedRelation: "talent_interviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_interview_questions_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_interview_responses: {
+        Row: {
+          ai_score: Json | null
+          created_at: string
+          id: string
+          org_id: string
+          question_id: string
+          response_text: string
+          score: number | null
+        }
+        Insert: {
+          ai_score?: Json | null
+          created_at?: string
+          id?: string
+          org_id: string
+          question_id: string
+          response_text?: string
+          score?: number | null
+        }
+        Update: {
+          ai_score?: Json | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          question_id?: string
+          response_text?: string
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_interview_responses_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_interview_responses_question_id_fkey"
+            columns: ["question_id"]
+            referencedRelation: "talent_interview_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_interviews: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          interview_type: string
+          interviewer_id: string | null
+          org_id: string
+          overall_score: number | null
+          requires_human_review: boolean
+          scheduled_at: string | null
+          status: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          interview_type?: string
+          interviewer_id?: string | null
+          org_id: string
+          overall_score?: number | null
+          requires_human_review?: boolean
+          scheduled_at?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          interview_type?: string
+          interviewer_id?: string | null
+          org_id?: string
+          overall_score?: number | null
+          requires_human_review?: boolean
+          scheduled_at?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_interviews_application_id_fkey"
+            columns: ["application_id"]
+            referencedRelation: "talent_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_interviews_interviewer_id_fkey"
+            columns: ["interviewer_id"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_interviews_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_job_postings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          description: string
+          employment_type: string
+          id: string
+          location: string | null
+          org_id: string
+          required_skills: string[]
+          seniority: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          description?: string
+          employment_type?: string
+          id?: string
+          location?: string | null
+          org_id: string
+          required_skills?: string[]
+          seniority?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          description?: string
+          employment_type?: string
+          id?: string
+          location?: string | null
+          org_id?: string
+          required_skills?: string[]
+          seniority?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_job_postings_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_job_postings_department_id_fkey"
+            columns: ["department_id"]
+            referencedRelation: "talent_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_job_postings_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_learning_recommendations: {
+        Row: {
+          course_title: string
+          created_at: string
+          employee_id: string
+          id: string
+          org_id: string
+          priority: string
+          provider: string | null
+          rationale: string | null
+          skill_id: string | null
+          status: string
+        }
+        Insert: {
+          course_title: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          org_id: string
+          priority?: string
+          provider?: string | null
+          rationale?: string | null
+          skill_id?: string | null
+          status?: string
+        }
+        Update: {
+          course_title?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          org_id?: string
+          priority?: string
+          provider?: string | null
+          rationale?: string | null
+          skill_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_learning_recommendations_employee_id_fkey"
+            columns: ["employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_learning_recommendations_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_learning_recommendations_skill_id_fkey"
+            columns: ["skill_id"]
+            referencedRelation: "talent_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          employee_id: string
+          id: string
+          org_id: string
+          status: string
+          step_key: string
+          step_kind: string
+          step_label: string
+          template_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          employee_id: string
+          id?: string
+          org_id: string
+          status?: string
+          step_key: string
+          step_kind?: string
+          step_label: string
+          template_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          employee_id?: string
+          id?: string
+          org_id?: string
+          status?: string
+          step_key?: string
+          step_kind?: string
+          step_label?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_onboarding_progress_employee_id_fkey"
+            columns: ["employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_onboarding_progress_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_onboarding_progress_template_id_fkey"
+            columns: ["template_id"]
+            referencedRelation: "talent_onboarding_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_onboarding_templates: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          role_title: string | null
+          steps: Json
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          role_title?: string | null
+          steps?: Json
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          role_title?: string | null
+          steps?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_onboarding_templates_department_id_fkey"
+            columns: ["department_id"]
+            referencedRelation: "talent_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_onboarding_templates_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_orgs: {
+        Row: {
+          ai_daily_quota: number
+          ai_model: string
+          ai_provider: string
+          brand_accent: string
+          created_at: string
+          data_retention_months: number
+          id: string
+          is_demo: boolean
+          name: string
+          plan: string
+          updated_at: string
+        }
+        Insert: {
+          ai_daily_quota?: number
+          ai_model?: string
+          ai_provider?: string
+          brand_accent?: string
+          created_at?: string
+          data_retention_months?: number
+          id?: string
+          is_demo?: boolean
+          name: string
+          plan?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_daily_quota?: number
+          ai_model?: string
+          ai_provider?: string
+          brand_accent?: string
+          created_at?: string
+          data_retention_months?: number
+          id?: string
+          is_demo?: boolean
+          name?: string
+          plan?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      talent_outcomes: {
+        Row: {
+          after_value: number | null
+          before_value: number | null
+          id: string
+          measured_at: string
+          metric: string
+          notes: string | null
+          org_id: string
+          resolved: boolean | null
+          workflow_id: string
+        }
+        Insert: {
+          after_value?: number | null
+          before_value?: number | null
+          id?: string
+          measured_at?: string
+          metric: string
+          notes?: string | null
+          org_id: string
+          resolved?: boolean | null
+          workflow_id: string
+        }
+        Update: {
+          after_value?: number | null
+          before_value?: number | null
+          id?: string
+          measured_at?: string
+          metric?: string
+          notes?: string | null
+          org_id?: string
+          resolved?: boolean | null
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_outcomes_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_outcomes_workflow_id_fkey"
+            columns: ["workflow_id"]
+            referencedRelation: "talent_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_performance_reviews: {
+        Row: {
+          created_at: string
+          employee_id: string
+          feedback_text: string | null
+          id: string
+          org_id: string
+          period: string
+          reviewer_id: string | null
+          score: number | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          feedback_text?: string | null
+          id?: string
+          org_id: string
+          period: string
+          reviewer_id?: string | null
+          score?: number | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          feedback_text?: string | null
+          id?: string
+          org_id?: string
+          period?: string
+          reviewer_id?: string | null
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_performance_reviews_employee_id_fkey"
+            columns: ["employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_performance_reviews_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_performance_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_policy_chunks: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          document_id: string
+          id: string
+          org_id: string
+          search_vector: unknown | null
+          section: string | null
+        }
+        Insert: {
+          chunk_index?: number
+          chunk_text: string
+          created_at?: string
+          document_id: string
+          id?: string
+          org_id: string
+          search_vector?: unknown | null
+          section?: string | null
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          org_id?: string
+          search_vector?: unknown | null
+          section?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_policy_chunks_document_id_fkey"
+            columns: ["document_id"]
+            referencedRelation: "talent_policy_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_policy_chunks_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_policy_documents: {
+        Row: {
+          category: string
+          created_at: string
+          file_url: string | null
+          id: string
+          org_id: string
+          status: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          org_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          org_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_policy_documents_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_policy_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          org_id: string
+          role: string
+          status: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          org_id: string
+          role?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          org_id?: string
+          role?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_profiles_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_risk_assessments: {
+        Row: {
+          assessed_at: string
+          confidence: number | null
+          employee_id: string
+          explanation: string | null
+          id: string
+          org_id: string
+          risk_level: string
+          signals: Json
+        }
+        Insert: {
+          assessed_at?: string
+          confidence?: number | null
+          employee_id: string
+          explanation?: string | null
+          id?: string
+          org_id: string
+          risk_level?: string
+          signals?: Json
+        }
+        Update: {
+          assessed_at?: string
+          confidence?: number | null
+          employee_id?: string
+          explanation?: string | null
+          id?: string
+          org_id?: string
+          risk_level?: string
+          signals?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_risk_assessments_employee_id_fkey"
+            columns: ["employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_risk_assessments_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_role_skill_requirements: {
+        Row: {
+          id: string
+          org_id: string
+          required_level: number
+          role_title: string
+          skill_id: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          required_level?: number
+          role_title: string
+          skill_id: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          required_level?: number
+          role_title?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_role_skill_requirements_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_role_skill_requirements_skill_id_fkey"
+            columns: ["skill_id"]
+            referencedRelation: "talent_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_skills: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_skills_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_workflow_tasks: {
+        Row: {
+          assignee_employee_id: string | null
+          assignee_name: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          org_id: string
+          status: string
+          title: string
+          workflow_id: string
+        }
+        Insert: {
+          assignee_employee_id?: string | null
+          assignee_name?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          org_id: string
+          status?: string
+          title: string
+          workflow_id: string
+        }
+        Update: {
+          assignee_employee_id?: string | null
+          assignee_name?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          org_id?: string
+          status?: string
+          title?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_workflow_tasks_assignee_employee_id_fkey"
+            columns: ["assignee_employee_id"]
+            referencedRelation: "talent_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_workflow_tasks_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_workflow_tasks_workflow_id_fkey"
+            columns: ["workflow_id"]
+            referencedRelation: "talent_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_workflows: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          recommendation_id: string
+          status: string
+          updated_at: string
+          workflow_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          recommendation_id: string
+          status?: string
+          updated_at?: string
+          workflow_type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          recommendation_id?: string
+          status?: string
+          updated_at?: string
+          workflow_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_workflows_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_workflows_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_workflows_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            referencedRelation: "talent_ai_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      talent_can_view_employee: {
+        Args: { target: string }
+        Returns: boolean
+      }
+      talent_complete_signup: {
+        Args: {
+          p_full_name: string
+          p_join_org_id?: string
+          p_org_name?: string
+          p_role: string
+        }
+        Returns: string
+      }
+      talent_current_org_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      talent_current_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      talent_demo_workspace_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      talent_is_hr: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      talent_is_manager_of: {
+        Args: { target: string }
+        Returns: boolean
+      }
+      talent_link_employee: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      talent_my_employee_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      talent_org_has_members: {
+        Args: { target: string }
+        Returns: boolean
+      }
+      talent_search_policy_chunks: {
+        Args: { match_count?: number; query_text: string }
+        Returns: {
+          chunk_id: string
+          chunk_text: string
+          document_id: string
+          document_title: string
+          rank: number
+          section: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

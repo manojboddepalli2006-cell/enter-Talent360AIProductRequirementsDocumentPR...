@@ -1,0 +1,217 @@
+-- Talent360 AI :: Migration 1 - organizations, people, skills
+-- RLS enabled in the same migration that creates each table.
+
+create or replace function public.talent_touch_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end; $$;
+
+-- ------------------------------------------------------------------ orgs
+create table public.talent_orgs (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  is_demo boolean not null default false,
+  plan text not null default 'pilot',
+  ai_provider text not null default 'qwen',
+  ai_model text not null default 'alibaba/qwen-3.7-plus',
+  ai_daily_quota integer not null default 2000,
+  data_retention_months integer not null default 12,
+  brand_accent text not null default '#7C3AED',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.talent_profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  email text not null,
+  full_name text not null,
+  role text not null default 'employee',
+  title text,
+  avatar_url text,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint talent_profiles_role_check check (role in ('org_admin','hr_admin','manager','employee'))
+);
+
+create table public.talent_departments (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  name text not null,
+  parent_department_id uuid references public.talent_departments(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create table public.talent_employees (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete set null,
+  full_name text not null,
+  email text,
+  department_id uuid references public.talent_departments(id) on delete set null,
+  manager_id uuid references public.talent_employees(id) on delete set null,
+  role_title text not null default 'Team Member',
+  seniority text,
+  location text,
+  hire_date date,
+  status text not null default 'active',
+  engagement_score integer,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.talent_skills (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  name text not null,
+  category text not null default 'General',
+  created_at timestamptz not null default now()
+);
+
+create table public.talent_employee_skills (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  employee_id uuid not null references public.talent_employees(id) on delete cascade,
+  skill_id uuid not null references public.talent_skills(id) on delete cascade,
+  proficiency integer not null default 50,
+  source text not null default 'self-reported',
+  updated_at timestamptz not null default now(),
+  unique (employee_id, skill_id)
+);
+
+create table public.talent_role_skill_requirements (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  role_title text not null,
+  skill_id uuid not null references public.talent_skills(id) on delete cascade,
+  required_level integer not null default 60,
+  unique (org_id, role_title, skill_id)
+);
+
+-- --------------------------------------------------------------- helpers
+create or replace function public.talent_current_org_id()
+returns uuid language sql stable security definer set search_path = public, pg_temp
+as $$ select org_id from public.talent_profiles where id = auth.uid() $$;
+
+create or replace function public.talent_current_role()
+returns text language sql stable security definer set search_path = public, pg_temp
+as $$ select role from public.talent_profiles where id = auth.uid() $$;
+
+create or replace function public.talent_is_hr()
+returns boolean language sql stable security definer set search_path = public, pg_temp
+as $$ select coalesce((select role from public.talent_profiles where id = auth.uid()) in ('org_admin','hr_admin'), false) $$;
+
+create or replace function public.talent_my_employee_id()
+returns uuid language sql stable security definer set search_path = public, pg_temp
+as $$ select id from public.talent_employees where user_id = auth.uid() limit 1 $$;
+
+create or replace function public.talent_is_manager_of(target uuid)
+returns boolean language sql stable security definer set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from public.talent_employees e
+    where e.id = target and e.manager_id = public.talent_my_employee_id()
+  )
+$$;
+
+create or replace function public.talent_can_view_employee(target uuid)
+returns boolean language sql stable security definer set search_path = public, pg_temp
+as $$
+  select public.talent_is_hr()
+      or exists (select 1 from public.talent_employees e where e.id = target and e.user_id = auth.uid())
+      or public.talent_is_manager_of(target)
+$$;
+
+create or replace function public.talent_org_has_members(target uuid)
+returns boolean language sql stable security definer set search_path = public, pg_temp
+as $$ select exists (select 1 from public.talent_profiles where org_id = target) $$;
+
+create or replace function public.talent_demo_workspace_id()
+returns uuid language sql stable security definer set search_path = public, pg_temp
+as $$ select id from public.talent_orgs where is_demo = true order by created_at limit 1 $$;
+
+-- --------------------------------------------------------- grants
+revoke all on public.talent_orgs, public.talent_profiles, public.talent_departments,
+  public.talent_employees, public.talent_skills, public.talent_employee_skills,
+  public.talent_role_skill_requirements from anon;
+grant select, insert, update, delete on public.talent_orgs, public.talent_profiles,
+  public.talent_departments, public.talent_employees, public.talent_skills,
+  public.talent_employee_skills, public.talent_role_skill_requirements to authenticated;
+
+-- ------------------------------------------------------------ RLS
+
+alter table public.talent_orgs enable row level security;
+create policy talent_orgs_select on public.talent_orgs for select to authenticated
+  using (id = public.talent_current_org_id());
+create policy talent_orgs_insert on public.talent_orgs for insert to authenticated
+  with check (auth.uid() is not null);
+create policy talent_orgs_update on public.talent_orgs for update to authenticated
+  using (id = public.talent_current_org_id() and public.talent_is_hr())
+  with check (id = public.talent_current_org_id() and public.talent_is_hr());
+
+alter table public.talent_profiles enable row level security;
+create policy talent_profiles_select on public.talent_profiles for select to authenticated
+  using (org_id = public.talent_current_org_id());
+create policy talent_profiles_insert on public.talent_profiles for insert to authenticated
+  with check (
+    id = auth.uid()
+    and (role <> 'org_admin' or not public.talent_org_has_members(org_id))
+  );
+create policy talent_profiles_update on public.talent_profiles for update to authenticated
+  using (id = auth.uid() or (org_id = public.talent_current_org_id() and public.talent_is_hr()))
+  with check (id = auth.uid() or (org_id = public.talent_current_org_id() and public.talent_is_hr()));
+
+alter table public.talent_departments enable row level security;
+create policy talent_departments_select on public.talent_departments for select to authenticated
+  using (org_id = public.talent_current_org_id());
+create policy talent_departments_write on public.talent_departments for all to authenticated
+  using (org_id = public.talent_current_org_id() and public.talent_is_hr())
+  with check (org_id = public.talent_current_org_id() and public.talent_is_hr());
+
+alter table public.talent_employees enable row level security;
+create policy talent_employees_select on public.talent_employees for select to authenticated
+  using (org_id = public.talent_current_org_id() and public.talent_can_view_employee(id));
+create policy talent_employees_insert on public.talent_employees for insert to authenticated
+  with check (org_id = public.talent_current_org_id() and public.talent_is_hr());
+create policy talent_employees_update on public.talent_employees for update to authenticated
+  using (org_id = public.talent_current_org_id() and (public.talent_is_hr() or user_id = auth.uid()))
+  with check (org_id = public.talent_current_org_id() and (public.talent_is_hr() or user_id = auth.uid()));
+create policy talent_employees_delete on public.talent_employees for delete to authenticated
+  using (org_id = public.talent_current_org_id() and public.talent_is_hr());
+
+alter table public.talent_skills enable row level security;
+create policy talent_skills_select on public.talent_skills for select to authenticated
+  using (org_id = public.talent_current_org_id());
+create policy talent_skills_write on public.talent_skills for all to authenticated
+  using (org_id = public.talent_current_org_id() and public.talent_is_hr())
+  with check (org_id = public.talent_current_org_id() and public.talent_is_hr());
+
+alter table public.talent_employee_skills enable row level security;
+create policy talent_employee_skills_select on public.talent_employee_skills for select to authenticated
+  using (org_id = public.talent_current_org_id() and public.talent_can_view_employee(employee_id));
+create policy talent_employee_skills_write on public.talent_employee_skills for all to authenticated
+  using (org_id = public.talent_current_org_id() and (public.talent_is_hr() or employee_id = public.talent_my_employee_id()))
+  with check (org_id = public.talent_current_org_id() and (public.talent_is_hr() or employee_id = public.talent_my_employee_id()));
+
+alter table public.talent_role_skill_requirements enable row level security;
+create policy talent_role_skill_reqs_select on public.talent_role_skill_requirements for select to authenticated
+  using (org_id = public.talent_current_org_id());
+create policy talent_role_skill_reqs_write on public.talent_role_skill_requirements for all to authenticated
+  using (org_id = public.talent_current_org_id() and public.talent_is_hr())
+  with check (org_id = public.talent_current_org_id() and public.talent_is_hr());
+
+-- ---------------------------------------------------------- indexes
+create index talent_profiles_org_idx on public.talent_profiles(org_id);
+create index talent_employees_org_idx on public.talent_employees(org_id);
+create index talent_employees_manager_idx on public.talent_employees(manager_id);
+create index talent_employees_user_idx on public.talent_employees(user_id);
+create index talent_employees_email_idx on public.talent_employees(org_id, lower(email));
+create index talent_departments_org_idx on public.talent_departments(org_id);
+create index talent_employee_skills_emp_idx on public.talent_employee_skills(employee_id);
+
+create trigger talent_orgs_touch before update on public.talent_orgs
+  for each row execute function public.talent_touch_updated_at();
+create trigger talent_profiles_touch before update on public.talent_profiles
+  for each row execute function public.talent_touch_updated_at();
+create trigger talent_employees_touch before update on public.talent_employees
+  for each row execute function public.talent_touch_updated_at();
