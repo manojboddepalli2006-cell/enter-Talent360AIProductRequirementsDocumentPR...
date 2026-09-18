@@ -6,6 +6,7 @@ import { NAV_GROUPS, canSeeItem } from "@/components/layout/nav-config";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "@/hooks/use-session";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { useTheme } from "@/hooks/use-theme";
 import { ROLE_LABELS } from "@/lib/domain";
 import { initialsOf } from "@/lib/format";
@@ -29,7 +30,8 @@ interface AppSidebarProps {
 export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavigate }: AppSidebarProps) {
   const { can } = usePermissions();
   const { profile, org } = useProfile();
-  const { user, signOut } = useSession();
+  const { user } = useSession();
+  const { signOut } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>

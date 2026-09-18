@@ -4698,6 +4698,7 @@ export type Database = {
           focus_areas: string[]
           id: string
           job_description: string | null
+          mode: string
           org_id: string
           overall_score: number | null
           question_count: number
@@ -4712,6 +4713,7 @@ export type Database = {
           focus_areas?: string[]
           id?: string
           job_description?: string | null
+          mode?: string
           org_id: string
           overall_score?: number | null
           question_count?: number
@@ -4726,6 +4728,7 @@ export type Database = {
           focus_areas?: string[]
           id?: string
           job_description?: string | null
+          mode?: string
           org_id?: string
           overall_score?: number | null
           question_count?: number

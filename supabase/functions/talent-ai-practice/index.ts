@@ -127,14 +127,18 @@ const FEEDBACK_SYSTEM = [
 ].join(NL);
 
 const COMPLETE_SYSTEM = [
-  "You summarise a completed practice interview for the candidate.",
+  "You are the hiring coach conducting the final review of a practice interview.",
   "You receive every question, its rubric score and the feedback given.",
   "Rules:",
   "- Write an encouraging but honest summary, 2-3 sentences.",
+  "- Decide a verdict: qualified (would progress to the next round), partially_qualified (strong but with clear gaps to close), or not_qualified (would not progress yet). Base it on the rubric scores and the substance of the answers, not on length.",
+  "- verdict_reason is one sentence justifying the verdict.",
+  "- right must list 2-4 concrete things the candidate did well, drawn from the feedback.",
+  "- wrong must list 2-4 concrete things that held the candidate back, drawn from the feedback.",
   "- strengths and improvements must each be 3-5 concrete points drawn from the feedback.",
   "- recommendation is one sentence about what to work on next.",
   "Return ONLY JSON in exactly this shape:",
-  '{"summary": string, "strengths": [string], "improvements": [string], "recommendation": string}',
+  '{"summary": string, "verdict": "qualified" | "partially_qualified" | "not_qualified", "verdict_reason": string, "right": [string], "wrong": [string], "strengths": [string], "improvements": [string], "recommendation": string}',
 ].join(NL);
 
 Deno.serve(async (req) => {
@@ -341,8 +345,16 @@ Deno.serve(async (req) => {
       ? Number((scores.reduce((sum, value) => sum + value, 0) / scores.length).toFixed(1))
       : null;
 
+    const verdict = parsed?.verdict === "qualified" || parsed?.verdict === "not_qualified" || parsed?.verdict === "partially_qualified"
+      ? parsed.verdict
+      : "partially_qualified";
+
     const summary = {
       summary: typeof parsed?.summary === "string" ? parsed.summary : "",
+      verdict,
+      verdict_reason: typeof parsed?.verdict_reason === "string" ? parsed.verdict_reason : "",
+      right: asStringArray(parsed?.right),
+      wrong: asStringArray(parsed?.wrong),
       strengths: asStringArray(parsed?.strengths),
       improvements: asStringArray(parsed?.improvements),
       recommendation: typeof parsed?.recommendation === "string" ? parsed.recommendation : "",
@@ -369,7 +381,7 @@ Deno.serve(async (req) => {
       metadata: { role_title: session.role_title, overall_score: overall, model: MODEL },
     });
 
-    return new Response(JSON.stringify({ ok: true, action, overall_score: overall, summary }), {
+    return new Response(JSON.stringify({ ok: true, action, overall_score: overall, summary, verdict }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

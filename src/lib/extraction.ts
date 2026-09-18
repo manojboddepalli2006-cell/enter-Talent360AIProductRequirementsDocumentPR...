@@ -34,7 +34,7 @@ async function extractPdf(file: File): Promise<string> {
     if (text) pages.push(text);
   }
 
-  await doc.destroy();
+  await (doc as unknown as { destroy: () => Promise<void> }).destroy();
   return pages.join("\n\n");
 }
 

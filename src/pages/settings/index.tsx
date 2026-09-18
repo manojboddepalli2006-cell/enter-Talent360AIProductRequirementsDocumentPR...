@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "@/hooks/use-session";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { useTheme } from "@/hooks/use-theme";
 import { ROLE_LABELS } from "@/lib/domain";
 import { formatDate } from "@/lib/format";
@@ -18,7 +19,8 @@ import { formatDate } from "@/lib/format";
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { profile, org, employee } = useProfile();
-  const { user, signOut } = useSession();
+  const { user } = useSession();
+  const { signOut } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
 
   const [fullName, setFullName] = useState("");

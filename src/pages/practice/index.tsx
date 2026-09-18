@@ -54,6 +54,7 @@ export default function PracticePage() {
   const { isHr } = usePermissions();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mode, setMode] = useState<"text" | "video">("text");
   const [roleTitle, setRoleTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [focusAreas, setFocusAreas] = useState<string[]>(["Behavioral", "Problem Solving"]);
@@ -98,6 +99,7 @@ export default function PracticePage() {
         jobDescription,
         focusAreas,
         questionCount: Number(questionCount) || 5,
+        mode,
         userId: profile?.id ?? null,
         orgId: org.id,
       });
@@ -220,6 +222,9 @@ export default function PracticePage() {
                         name={session.role_title}
                         subtext={`${session.question_count} question${session.question_count === 1 ? "" : "s"} · ${session.answeredCount} answered`}
                         tone="primary"
+                        trailing={
+                          session.mode === "video" ? <StatusPill tone="accent">Video</StatusPill> : undefined
+                        }
                       />
                     </td>
                     <td className="py-3 pr-4">
@@ -249,7 +254,7 @@ export default function PracticePage() {
                     <td className="py-3 pr-4">
                       <div className="flex items-center justify-end gap-1.5">
                         <Button variant="soft" size="sm" asChild>
-                          <Link to={`/app/practice/${session.id}`}>
+                          <Link to={session.mode === "video" ? `/app/practice/${session.id}/video` : `/app/practice/${session.id}`}>
                             {session.status === "completed" ? "Review" : "Resume"}
                             <ArrowRight className="h-3.5 w-3.5" />
                           </Link>
@@ -287,6 +292,38 @@ export default function PracticePage() {
           </DialogHeader>
 
           <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="talent-label">Interview format</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMode("text")}
+                  className={cn(
+                    "flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-colors",
+                    mode === "text" ? "border-primary bg-primary-soft" : "border-border bg-card hover:border-primary/40",
+                  )}
+                >
+                  <span className="text-[12.5px] font-semibold text-foreground">Text interview</span>
+                  <span className="text-[11px] font-medium leading-snug text-muted-foreground">
+                    Type your answers. Best for a quick warm-up.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("video")}
+                  className={cn(
+                    "flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-colors",
+                    mode === "video" ? "border-primary bg-primary-soft" : "border-border bg-card hover:border-primary/40",
+                  )}
+                >
+                  <span className="text-[12.5px] font-semibold text-foreground">Video interview</span>
+                  <span className="text-[11px] font-medium leading-snug text-muted-foreground">
+                    The AI asks aloud and records your answer on camera.
+                  </span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="practiceRole">Role you are preparing for</Label>
               <Input

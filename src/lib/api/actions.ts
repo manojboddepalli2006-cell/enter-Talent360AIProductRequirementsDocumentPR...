@@ -93,7 +93,7 @@ async function writeAudit(entry: {
   action: string;
   entityType: string;
   entityId: string | null;
-  metadata: Record<string, unknown>;
+  metadata: unknown;
 }): Promise<void> {
   const { error } = await supabase.from("talent_audit_log").insert({
     org_id: entry.orgId,
@@ -102,7 +102,7 @@ async function writeAudit(entry: {
     action: entry.action,
     entity_type: entry.entityType,
     entity_id: entry.entityId,
-    metadata: entry.metadata,
+    metadata: entry.metadata as never,
   });
   if (error) throw new Error(error.message);
 }

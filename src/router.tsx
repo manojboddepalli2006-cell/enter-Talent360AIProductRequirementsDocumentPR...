@@ -29,6 +29,7 @@ import AdminIntegrationsPage from "./pages/admin/integrations";
 import AdminUsagePage from "./pages/admin/usage";
 import PracticePage from "./pages/practice";
 import PracticeSessionPage from "./pages/practice/session";
+import VideoPracticeSessionPage from "./pages/practice/video-session";
 import SettingsPage from "./pages/settings";
 import NotFound from "./pages/NotFound";
 
@@ -234,6 +235,7 @@ export const routers = [
       },
       { path: "practice", name: "practice", element: <PracticePage /> },
       { path: "practice/:sessionId", name: "practice-session", element: <PracticeSessionPage /> },
+      { path: "practice/:sessionId/video", name: "practice-video-session", element: <VideoPracticeSessionPage /> },
       { path: "settings", name: "settings", element: <SettingsPage /> },
     ],
   },

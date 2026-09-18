@@ -37,11 +37,23 @@ export async function listSessions(): Promise<PracticeSessionWithMeta[]> {
   );
 }
 
+export interface PracticeSummary {
+  summary: string;
+  verdict?: "qualified" | "partially_qualified" | "not_qualified";
+  verdict_reason?: string;
+  right?: string[];
+  wrong?: string[];
+  strengths: string[];
+  improvements: string[];
+  recommendation: string;
+}
+
 export async function createPracticeSession(input: {
   roleTitle: string;
   jobDescription?: string;
   focusAreas: string[];
   questionCount: number;
+  mode: "text" | "video";
   userId: string | null;
   orgId: string;
 }): Promise<string> {
@@ -54,6 +66,7 @@ export async function createPracticeSession(input: {
       job_description: input.jobDescription?.trim() || null,
       focus_areas: input.focusAreas,
       question_count: input.questionCount,
+      mode: input.mode,
       status: "in_progress",
     })
     .select("id")

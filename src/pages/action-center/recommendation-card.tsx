@@ -1,4 +1,4 @@
-import { Check, Clock, GitBranch, PencilLine, ShieldAlert, X } from "lucide-react";
+import { Check, Clock, GitBranch, PencilLine, X } from "lucide-react";
 import { StatusPill } from "@/components/common/status-pill";
 import { ReasoningPanel } from "@/components/common/reasoning-panel";
 import { Button } from "@/components/ui/button";
@@ -70,22 +70,6 @@ export function RecommendationCard({ recommendation, reviewerName, onDecide }: R
           <UserCell name={subjectName} subtext={subjectSubtext} className="shrink-0" />
         ) : null}
       </header>
-
-      {recommendation.bias_flags && Array.isArray(recommendation.bias_flags) && recommendation.bias_flags.length > 0 ? (
-        <div className="flex items-start gap-2 rounded-lg bg-warning-soft px-3 py-2.5 text-warning-soft-foreground">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-          <div>
-            <div className="text-[12px] font-bold">Fairness flag raised for human review</div>
-            <ul className="mt-0.5 flex flex-col gap-0.5">
-              {(recommendation.bias_flags as Array<{ type?: string; note?: string }>).map((flag, index) => (
-                <li key={`${flag.type}-${index}`} className="text-[11.5px] font-medium leading-snug">
-                  {flag.note ?? flag.type ?? "Review required"}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
 
       <ReasoningPanel
         signals={structured?.reasoning_signals ?? []}
