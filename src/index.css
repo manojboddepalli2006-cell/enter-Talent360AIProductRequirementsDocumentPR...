@@ -3,176 +3,157 @@
 @tailwind utilities;
 
 /*
-  Talent360 AI design tokens — premium edition.
-  Light canvas + permanently dark sidebar, matching the reference admin shell.
-  Every colour used by a component must resolve through one of these tokens.
+  Talent360 AI — Apple HIG visual layer.
+  Tokens mirror SF platform semantic colors and adapt to light/dark automatically.
+  Layout is handled with relative sizing + flex/grid and safe-area insets below,
+  in the spirit of Auto Layout — see app-shell.tsx and app-sidebar.tsx comments.
 */
 @layer base {
   :root {
-    --background: 240 33% 97%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    /* Apple system grouped background / surfaces */
+    --background: 240 33% 96%;          /* systemGroupedBackground (iOS) */
+    --foreground: 240 6% 10%;           /* primary label */
+    --card: 0 0% 100%;                  /* secondarySystemGroupedBackground */
+    --card-foreground: 240 6% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 240 6% 10%;
 
-    --primary: 262 83% 58%;
+    /* systemIndigo carries the brand while staying on the Apple palette */
+    --primary: 239 58% 59%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 269 100% 95%;
-    --primary-soft-foreground: 268 60% 40%;
+    --primary-soft: 239 58% 59% / 0.14; /* tinted fill */
+    --primary-soft-foreground: 239 58% 45%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 240 6% 93%;           /* systemFill-ish gray */
+    --secondary-foreground: 240 6% 10%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 240 6% 93%;
+    --muted-foreground: 240 6% 41%;    /* secondary label */
 
-    --accent: 330 81% 60%;
+    /* systemPink as the warm accent */
+    --accent: 347 100% 59%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 326 78% 95%;
-    --accent-soft-foreground: 330 70% 42%;
+    --accent-soft: 347 100% 59% / 0.12;
+    --accent-soft-foreground: 347 90% 44%;
 
-    --destructive: 0 72% 51%;
+    /* Apple system colors */
+    --destructive: 4 100% 59%;         /* systemRed */
     --destructive-foreground: 0 0% 100%;
-    --destructive-soft: 0 93% 94%;
-    --destructive-soft-foreground: 0 74% 42%;
+    --destructive-soft: 4 100% 59% / 0.12;
+    --destructive-soft-foreground: 4 90% 45%;
 
-    --success: 160 84% 39%;
+    --success: 145 63% 49%;            /* systemGreen */
     --success-foreground: 0 0% 100%;
-    --success-soft: 141 84% 93%;
-    --success-soft-foreground: 142 71% 34%;
+    --success-soft: 145 63% 49% / 0.14;
+    --success-soft-foreground: 142 70% 34%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 26 83% 14%;
-    --warning-soft: 48 96% 89%;
-    --warning-soft-foreground: 32 81% 34%;
+    --warning: 32 100% 50%;            /* systemOrange */
+    --warning-foreground: 26 100% 14%;
+    --warning-soft: 32 100% 50% / 0.14;
+    --warning-soft-foreground: 26 92% 40%;
 
-    --info: 217 91% 60%;
+    --info: 211 100% 50%;              /* systemBlue */
     --info-foreground: 0 0% 100%;
-    --info-soft: 214 95% 93%;
-    --info-soft-foreground: 224 76% 42%;
+    --info-soft: 211 100% 50% / 0.12;
+    --info-soft-foreground: 211 95% 42%;
 
-    --border: 214 32% 95%;
-    --input: 214 32% 93%;
-    --ring: 262 83% 58%;
+    /* Hairline separators — Apple keeps these nearly invisible */
+    --border: 240 6% 86%;
+    --input: 240 6% 90%;
+    --ring: 239 58% 59%;
 
-    --radius: 1rem;
+    --radius: 0.875rem;
 
-    --chart-1: 262 83% 58%;
-    --chart-2: 217 91% 60%;
-    --chart-3: 330 81% 60%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 160 84% 39%;
+    --chart-1: 239 58% 59%;  /* indigo */
+    --chart-2: 211 100% 50%; /* blue */
+    --chart-3: 347 100% 59%; /* pink */
+    --chart-4: 32 100% 50%;  /* orange */
+    --chart-5: 145 63% 49%;  /* green */
 
-    /* Sidebar stays dark in both themes, as in the reference shell. */
-    --sidebar-background: 226 32% 9%;
-    --sidebar-foreground: 217 14% 62%;
-    --sidebar-primary: 262 83% 66%;
+    /* macOS-style translucent source list (light material) */
+    --sidebar-background: 240 7% 97% / 0.72;   /* #F6F6F8 light material */
+    --sidebar-foreground: 240 6% 30%;
+    --sidebar-primary: 239 58% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 26% 17%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 226 24% 14%;
-    --sidebar-ring: 262 83% 66%;
-    --sidebar-elevated: 228 26% 14%;
-    --sidebar-muted: 229 25% 20%;
+    --sidebar-accent: 0 0% 0% / 0.06;  /* selected row fill */
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 0 0% 0% / 0.12;
+    --sidebar-ring: 239 58% 59%;
+    --sidebar-elevated: 0 0% 0% / 0.04;
+    --sidebar-muted: 240 6% 45% / 0.35;
 
-    /* Premium surfaces */
-    --gradient-brand: linear-gradient(135deg, hsl(262 83% 56%), hsl(283 74% 60%));
-    --gradient-accent: linear-gradient(135deg, hsl(330 81% 58%), hsl(347 83% 60%));
-    --gradient-warm: linear-gradient(135deg, hsl(38 92% 50%), hsl(24 94% 54%));
-    --gradient-cool: linear-gradient(135deg, hsl(217 91% 58%), hsl(262 83% 60%));
-    --gradient-canvas:
-      radial-gradient(58% 42% at 12% -4%, hsl(262 83% 58% / 0.07), transparent 70%),
-      radial-gradient(46% 38% at 104% 8%, hsl(330 81% 60% / 0.07), transparent 70%),
-      radial-gradient(50% 40% at 50% 108%, hsl(217 91% 60% / 0.05), transparent 70%);
-
-    --shadow-card: 0 1px 2px 0 hsl(222 47% 11% / 0.05), 0 2px 8px -2px hsl(222 47% 11% / 0.05);
-    --shadow-card-hover:
-      0 1px 2px 0 hsl(222 47% 11% / 0.04),
-      0 18px 40px -16px hsl(262 70% 48% / 0.22);
-    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.14), 0 10px 40px -10px hsl(var(--primary) / 0.5);
-    --shadow-panel: 0 24px 64px -24px hsl(222 47% 11% / 0.28);
+    --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.05), 0 1px 8px -1px hsl(0 0% 0% / 0.04);
+    --shadow-panel: 0 20px 60px -20px hsl(0 0% 0% / 0.25), 0 0 0 0.5px hsl(0 0% 0% / 0.08);
   }
 
   .dark {
-    --background: 224 42% 6%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 0%;             /* systemBackground (dark) */
+    --foreground: 0 0% 100%;           /* primary label */
+    --card: 240 6% 11%;                /* #1C1C1E */
+    --card-foreground: 0 0% 100%;
 
-    --card: 224 38% 9%;
-    --card-foreground: 210 40% 98%;
+    --popover: 240 6% 11%;
+    --popover-foreground: 0 0% 100%;
 
-    --popover: 224 38% 11%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 262 83% 66%;
+    --primary: 239 74% 63%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 263 45% 20%;
-    --primary-soft-foreground: 263 90% 84%;
+    --primary-soft: 239 74% 63% / 0.24;
+    --primary-soft-foreground: 239 80% 84%;
 
-    --secondary: 224 32% 15%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 240 5% 20%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 224 32% 15%;
-    --muted-foreground: 215 20% 66%;
+    --muted: 240 5% 20%;
+    --muted-foreground: 240 6% 72%;    /* secondary label */
 
-    --accent: 330 81% 64%;
+    --accent: 347 100% 61%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 330 40% 20%;
-    --accent-soft-foreground: 330 85% 84%;
+    --accent-soft: 347 100% 61% / 0.22;
+    --accent-soft-foreground: 347 90% 82%;
 
-    --destructive: 0 72% 58%;
+    --destructive: 5 100% 62%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-soft: 0 40% 20%;
-    --destructive-soft-foreground: 0 90% 82%;
+    --destructive-soft: 5 100% 62% / 0.2;
+    --destructive-soft-foreground: 5 95% 82%;
 
-    --success: 160 70% 45%;
-    --success-foreground: 160 90% 8%;
-    --success-soft: 160 35% 18%;
-    --success-soft-foreground: 152 70% 74%;
+    --success: 142 64% 50%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 142 64% 50% / 0.2;
+    --success-soft-foreground: 142 75% 80%;
 
-    --warning: 38 92% 55%;
-    --warning-foreground: 26 83% 10%;
-    --warning-soft: 38 40% 19%;
-    --warning-soft-foreground: 44 90% 76%;
+    --warning: 35 100% 52%;
+    --warning-foreground: 26 100% 12%;
+    --warning-soft: 35 100% 52% / 0.2;
+    --warning-soft-foreground: 36 95% 80%;
 
-    --info: 217 91% 64%;
+    --info: 211 100% 52%;
     --info-foreground: 0 0% 100%;
-    --info-soft: 217 40% 20%;
-    --info-soft-foreground: 214 95% 82%;
+    --info-soft: 211 100% 52% / 0.2;
+    --info-soft-foreground: 211 95% 82%;
 
-    --border: 224 28% 16%;
-    --input: 224 28% 19%;
-    --ring: 262 83% 66%;
+    --border: 0 0% 100% / 0.14;        /* hairline on dark */
+    --input: 0 0% 100% / 0.16;
+    --ring: 239 74% 63%;
 
-    --chart-1: 262 83% 68%;
-    --chart-2: 217 91% 68%;
-    --chart-3: 330 81% 68%;
-    --chart-4: 38 92% 60%;
-    --chart-5: 160 70% 50%;
+    --chart-1: 239 74% 66%;
+    --chart-2: 211 100% 56%;
+    --chart-3: 347 100% 63%;
+    --chart-4: 35 100% 56%;
+    --chart-5: 142 64% 54%;
 
-    --sidebar-background: 226 36% 7%;
-    --sidebar-foreground: 217 14% 64%;
-    --sidebar-accent: 227 26% 15%;
+    --sidebar-background: 240 6% 19% / 0.78;
+    --sidebar-foreground: 240 6% 82%;
+    --sidebar-primary: 239 74% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 100% / 0.1;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 226 24% 12%;
-    --sidebar-elevated: 228 26% 13%;
-    --sidebar-muted: 229 25% 18%;
+    --sidebar-border: 0 0% 100% / 0.12;
+    --sidebar-elevated: 0 0% 100% / 0.06;
+    --sidebar-muted: 0 0% 100% / 0.22;
 
-    --gradient-brand: linear-gradient(135deg, hsl(262 83% 60%), hsl(283 74% 64%));
-    --gradient-accent: linear-gradient(135deg, hsl(330 81% 62%), hsl(347 83% 64%));
-    --gradient-warm: linear-gradient(135deg, hsl(38 92% 52%), hsl(24 94% 58%));
-    --gradient-cool: linear-gradient(135deg, hsl(217 91% 62%), hsl(262 83% 64%));
-    --gradient-canvas:
-      radial-gradient(58% 42% at 12% -4%, hsl(262 83% 66% / 0.08), transparent 70%),
-      radial-gradient(46% 38% at 104% 8%, hsl(330 81% 64% / 0.08), transparent 70%),
-      radial-gradient(50% 40% at 50% 108%, hsl(217 91% 64% / 0.06), transparent 70%);
-
-    --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.4), 0 2px 10px -2px hsl(0 0% 0% / 0.35);
-    --shadow-card-hover: 0 1px 2px 0 hsl(0 0% 0% / 0.3), 0 18px 44px -16px hsl(262 70% 55% / 0.35);
-    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.2), 0 10px 44px -10px hsl(var(--primary) / 0.45);
-    --shadow-panel: 0 24px 64px -24px hsl(0 0% 0% / 0.6);
+    --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-panel: 0 20px 60px -20px hsl(0 0% 0% / 0.7), 0 0 0 0.5px hsl(0 0% 100% / 0.08);
   }
 }
 
@@ -182,40 +163,43 @@
   }
 
   ::selection {
-    background: hsl(var(--primary) / 0.18);
+    background: hsl(var(--primary) / 0.2);
     color: hsl(var(--foreground));
   }
 
   body {
     @apply bg-background text-foreground antialiased;
+    /* SF Pro stack: tight tracking on display text, looser on captions */
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    background-image: var(--gradient-canvas);
-    background-attachment: fixed;
   }
 
   h1,
   h2,
   h3,
   h4 {
+    letter-spacing: -0.02em;
     @apply tracking-tight;
   }
 
   button:focus-visible,
   a:focus-visible,
   [tabindex]:focus-visible {
-    outline: 2px solid hsl(var(--ring) / 0.55);
+    outline: 2px solid hsl(var(--ring) / 0.6);
     outline-offset: 2px;
-    border-radius: 0.375rem;
   }
 }
 
 @layer components {
   .talent-label {
-    @apply text-[11px] font-bold uppercase tracking-[0.09em] text-muted-foreground;
+    /* Apple caption: SF regular, looser tracking */
+    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground;
   }
 
   .talent-chip {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold leading-none;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none;
   }
 
   .talent-tile {
@@ -225,28 +209,26 @@
 
   .talent-tile-hover {
     transition:
-      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 0.25s ease;
+      transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+      box-shadow 0.22s ease,
+      background-color 0.22s ease;
   }
 
   .talent-tile-hover:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-card-hover);
-    border-color: hsl(var(--primary) / 0.18);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-panel);
   }
 
-  .talent-gradient-text {
-    background-image: var(--gradient-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
+  /* iOS "materials": translucent surface + heavy blur (Vibrancy approximation) */
   .talent-glass {
-    background: hsl(var(--card) / 0.72);
-    backdrop-filter: blur(14px) saturate(160%);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    background: hsl(var(--card) / 0.68);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  /* Hairline divider, Apple-grade: 0.5px where supported */
+  .hairline {
+    border-width: 0.5px;
   }
 }
 
@@ -257,7 +239,19 @@ body,
   height: 100%;
 }
 
-/* Slim scrollbars. */
+/* Safe-area helpers: pads fixed chrome away from notches / home indicator.
+   Used in app-shell.tsx (mobile tab bar) and the sidebar on compact screens. */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 .talent-scroll {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--border)) transparent;
@@ -287,8 +281,6 @@ body,
 .recharts-surface:focus {
   outline: none;
 }
-
-/* Recharts first-paint guard: never measure the chart at 0×0. */
 .recharts-responsive-container {
   min-width: 0;
   min-height: 0;

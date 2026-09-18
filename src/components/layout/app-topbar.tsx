@@ -39,8 +39,8 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
   const pending = pendingQuery.data ?? 0;
 
   return (
-    <header className="talent-glass sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-4 md:px-6">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="talent-glass safe-top sticky top-0 z-20 flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 md:px-6">
+      <div className="flex h-14 min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onOpenMobileNav}
@@ -60,7 +60,7 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex h-14 items-center gap-2">
         <button
           type="button"
           onClick={onOpenPalette}
@@ -80,7 +80,7 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
         >
           <Bell className="h-4 w-4" />
           {pending > 0 ? (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-accent px-1 text-[9px] font-extrabold text-accent-foreground shadow-glow">
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-extrabold text-accent-foreground ">
               {pending > 99 ? "99+" : pending}
             </span>
           ) : null}

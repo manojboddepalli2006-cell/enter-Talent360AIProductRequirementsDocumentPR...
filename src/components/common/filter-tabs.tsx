@@ -43,7 +43,7 @@ export function FilterTabs({ items, value, onChange, className }: FilterTabsProp
               </span>
             ) : null}
             {active ? (
-              <span className="absolute inset-x-2 -bottom-px h-[3px] rounded-full bg-gradient-brand shadow-glow" />
+              <span className="absolute inset-x-2 -bottom-px h-[3px] rounded-full bg-primary" />
             ) : null}
           </button>
         );

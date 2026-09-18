@@ -4,13 +4,21 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
+import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 /**
- * Application chrome: a permanently dark sidebar beside a light canvas, with the
- * sidebar collapsing to an icon rail on desktop and to a drawer below `md`.
- * Routes cross-fade inside the main panel.
+ * Application chrome.
+ *
+ * Auto-layout notes (Apple HIG equivalent):
+ * - Desktop (regular width): a translucent macOS source list sidebar sized by
+ *   content constraints (w-[268px] vs w-[76px]), the main panel flex-1 taking
+ *   every remaining pixel — no fixed pixel widths on content.
+ * - Compact (phone): the sidebar moves into a drawer and navigation becomes the
+ *   bottom tab bar, which respects the home-indicator safe area.
+ * - Safe areas: the top bar sits under the status bar/notch via `.safe-top`,
+ *   and the tab bar pads with `env(safe-area-inset-bottom)`.
  */
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
@@ -38,7 +46,7 @@ export function AppShell() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex h-full w-full overflow-hidden bg-background">
-        {/* Desktop sidebar */}
+        {/* macOS-style translucent source list — regular widths only */}
         <aside
           className={cn(
             "hidden shrink-0 border-r border-sidebar-border transition-[width] duration-300 ease-out md:block",
@@ -52,9 +60,9 @@ export function AppShell() {
           />
         </aside>
 
-        {/* Mobile drawer */}
+        {/* Compact-width drawer (full navigation) */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent side="left" className="w-[288px] border-sidebar-border bg-sidebar p-0">
+          <SheetContent side="left" className="w-[300px] max-w-[85vw] border-sidebar-border p-0">
             <SheetTitle className="sr-only">Talent360 AI navigation</SheetTitle>
             <AppSidebar
               collapsed={false}
@@ -74,7 +82,8 @@ export function AppShell() {
             onOpenPalette={() => setPaletteOpen(true)}
           />
 
-          <main className="talent-scroll flex-1 overflow-y-auto px-4 py-5 md:px-6 md:py-6">
+          {/* Bottom padding clears the floating iOS tab bar on phones. */}
+          <main className="talent-scroll flex-1 overflow-y-auto px-4 py-5 pb-32 md:px-6 md:py-6 md:pb-8">
             <div className="mx-auto w-full max-w-[1600px]">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -82,7 +91,7 @@ export function AppShell() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.24, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <Outlet />
                 </motion.div>
@@ -91,6 +100,7 @@ export function AppShell() {
           </main>
         </div>
 
+        <MobileTabBar />
         <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       </div>
     </MotionConfig>

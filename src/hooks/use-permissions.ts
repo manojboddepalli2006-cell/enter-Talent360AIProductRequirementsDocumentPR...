@@ -39,6 +39,7 @@ const EMPLOYEE_CAPABILITIES: Capability[] = ["view_self", "use_copilot"];
 
 const HR_CAPABILITIES: Capability[] = [
   "view_org_overview",
+  "view_self",
   "view_recruitment",
   "manage_recruitment",
   "view_interviews",

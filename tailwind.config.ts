@@ -20,7 +20,18 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif']
+				// Apple SF Pro stack — use the native system font everywhere.
+				sans: [
+					'-apple-system',
+					'BlinkMacSystemFont',
+					'"SF Pro Text"',
+					'"SF Pro Display"',
+					'"Segoe UI"',
+					'Roboto',
+					'"Helvetica Neue"',
+					'Arial',
+					'sans-serif'
+				]
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -105,17 +116,8 @@ export default {
 				md: 'calc(var(--radius) - 4px)',
 				sm: 'calc(var(--radius) - 6px)'
 			},
-			backgroundImage: {
-				'gradient-brand': 'var(--gradient-brand)',
-				'gradient-accent': 'var(--gradient-accent)',
-				'gradient-warm': 'var(--gradient-warm)',
-				'gradient-cool': 'var(--gradient-cool)',
-				'gradient-canvas': 'var(--gradient-canvas)'
-			},
 			boxShadow: {
 				card: 'var(--shadow-card)',
-				'card-hover': 'var(--shadow-card-hover)',
-				glow: 'var(--shadow-glow)',
 				panel: 'var(--shadow-panel)'
 			},
 			keyframes: {
@@ -146,21 +148,16 @@ export default {
 				'pulse-soft': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.55' }
-				},
-				'gradient-shift': {
-					'0%, 100%': { backgroundPosition: '0% 50%' },
-					'50%': { backgroundPosition: '100% 50%' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-up': 'fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both',
+				'fade-up': 'fade-up 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both',
 				'fade-in': 'fade-in 0.3s ease both',
 				'float-slow': 'float-slow 7s ease-in-out infinite',
 				'shimmer': 'shimmer 1.6s linear infinite',
-				'pulse-soft': 'pulse-soft 2.4s ease-in-out infinite',
-				'gradient-shift': 'gradient-shift 6s ease infinite'
+				'pulse-soft': 'pulse-soft 2.4s ease-in-out infinite'
 			}
 		}
 	},

@@ -56,12 +56,13 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
   const displayEmail = profile?.email ?? user?.email ?? "";
 
   return (
-    <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
+    /* macOS-style translucent source list: material over the canvas,
+       with a hairline right edge instead of a hard shadow. */
+    <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground backdrop-blur-2xl">
       {/* Brand */}
       <div className={cn("flex items-center gap-2.5 px-4 py-5", collapsed && "justify-center px-2")}>
-        <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-brand text-[13px] font-extrabold text-primary-foreground shadow-glow">
-          <span aria-hidden className="absolute inset-0 bg-gradient-brand bg-[length:200%_200%] animate-gradient-shift" />
-          <span className="relative">T3</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground">
+          T3
         </span>
         {!collapsed ? (
           <div className="min-w-0">
@@ -80,7 +81,7 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
           onClick={onOpenPalette}
           title="Search and jump to a module"
           className={cn(
-            "flex w-full items-center gap-2 rounded-xl bg-sidebar-elevated px-3 py-2.5 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            "flex w-full items-center gap-2 rounded-[10px] bg-sidebar-elevated px-3 py-2.5 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
             collapsed && "justify-center px-2",
           )}
         >
@@ -132,11 +133,11 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
                       title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
                         cn(
-                          "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-all duration-200",
+                          "group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] font-medium transition-colors duration-150",
                           collapsed && "justify-center px-2",
                           isActive
-                            ? "bg-gradient-brand text-primary-foreground shadow-glow"
-                            : "text-sidebar-foreground hover:bg-sidebar-elevated hover:text-sidebar-accent-foreground",
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                            : "text-sidebar-foreground hover:bg-sidebar-elevated",
                         )
                       }
                     >

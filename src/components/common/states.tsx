@@ -55,7 +55,7 @@ export function ErrorState({ title = "Something went wrong", message, onRetry, c
         <button
           type="button"
           onClick={onRetry}
-          className="mt-1 rounded-xl bg-gradient-brand px-3.5 py-1.5 text-[12px] font-bold text-primary-foreground shadow-glow transition-transform active:scale-[0.98]"
+          className="mt-1 rounded-xl bg-primary px-3.5 py-1.5 text-[12px] font-bold text-primary-foreground transition-transform active:scale-[0.97]"
         >
           Try again
         </button>

@@ -39,7 +39,7 @@ export function RecommendationCard({ recommendation, reviewerName, onDecide }: R
       {highRisk ? (
         <span
           aria-hidden
-          className="absolute inset-x-0 top-0 h-[3px] bg-gradient-accent"
+          className="absolute inset-x-0 top-0 h-[3px] bg-accent"
         />
       ) : null}
       <header className="flex flex-wrap items-start justify-between gap-3">

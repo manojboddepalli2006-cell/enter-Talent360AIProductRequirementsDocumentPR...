@@ -26,60 +26,41 @@ const PILLARS = [
   },
 ];
 
-/** Split auth surface: brand panel on the left, glass form card on the right. */
+/**
+ * Apple-style split auth surface.
+ * Auto-layout notes: the two panels are percentage-width flex items (46% / 54%)
+ * on regular widths and stack to a single intrinsic-height column on compact
+ * widths — no pixel-perfect media queries, just flex wrapping.
+ */
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
-    <div className="relative flex min-h-full w-full overflow-hidden bg-background">
-      {/* Floating gradient orbs */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -left-24 top-10 h-72 w-72 animate-float-slow rounded-full blur-3xl"
-        style={{ background: "hsl(262 83% 58% / 0.18)" }}
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -right-20 bottom-4 h-80 w-80 animate-float-slow rounded-full blur-3xl"
-        style={{ background: "hsl(330 81% 60% / 0.16)", animationDelay: "2s" }}
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-1/3 top-1/2 h-64 w-64 animate-float-slow rounded-full blur-3xl"
-        style={{ background: "hsl(217 91% 60% / 0.1)", animationDelay: "4s" }}
-      />
-
-      {/* Brand panel */}
-      <div className="relative hidden w-[46%] flex-col justify-between overflow-hidden bg-sidebar p-10 lg:flex">
+    <div className="relative flex min-h-full w-full flex-col bg-background lg:flex-row">
+      {/* Brand panel — macOS-style translucent sidebar material */}
+      <div className="relative flex w-full flex-col justify-between gap-10 overflow-hidden border-b border-border bg-sidebar p-8 backdrop-blur-2xl lg:w-[46%] lg:border-b-0 lg:border-r lg:border-sidebar-border lg:p-10">
         <div
-          className="pointer-events-none absolute inset-0 opacity-80"
+          className="pointer-events-none absolute inset-0 opacity-60"
           style={{
             backgroundImage:
-              "radial-gradient(60% 50% at 15% 0%, hsl(var(--primary) / 0.4), transparent 70%), radial-gradient(50% 45% at 90% 100%, hsl(var(--accent) / 0.32), transparent 70%)",
+              "radial-gradient(70% 60% at 20% 0%, hsl(var(--primary) / 0.18), transparent 70%), radial-gradient(60% 55% at 95% 100%, hsl(var(--accent) / 0.12), transparent 70%)",
           }}
           aria-hidden
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px"
-          style={{ backgroundImage: "linear-gradient(90deg, transparent, hsl(var(--primary) / 0.6), transparent)" }}
-        />
 
         <div className="relative flex items-center gap-3">
-          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-gradient-brand text-[14px] font-extrabold text-primary-foreground shadow-glow">
-            <span aria-hidden className="absolute inset-0 bg-gradient-brand bg-[length:200%_200%] animate-gradient-shift" />
-            <span className="relative">T3</span>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary text-[14px] font-bold text-primary-foreground">
+            T3
           </span>
           <div>
-            <div className="text-[16px] font-extrabold text-sidebar-accent-foreground">Talent360 AI</div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground">
+            <div className="text-[16px] font-bold text-sidebar-accent-foreground">Talent360 AI</div>
+            <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-sidebar-foreground">
               Workforce Intelligence
             </div>
           </div>
         </div>
 
         <div className="relative">
-          <h2 className="max-w-md text-[31px] font-extrabold leading-tight text-sidebar-accent-foreground">
-            One intelligence layer across the whole{" "}
-            <span className="bg-gradient-brand bg-clip-text text-transparent">employee lifecycle.</span>
+          <h2 className="max-w-md text-[30px] font-bold leading-[1.15] tracking-tight text-sidebar-accent-foreground">
+            One intelligence layer across the whole employee lifecycle.
           </h2>
           <p className="mt-3 max-w-md text-[13.5px] font-medium leading-relaxed text-sidebar-foreground">
             Recruit, interview, onboard, develop, monitor and retain — on data you already have, with a
@@ -89,11 +70,13 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
           <ul className="mt-8 flex flex-col gap-4">
             {PILLARS.map((pillar) => (
               <li key={pillar.title} className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-elevated text-sidebar-accent-foreground ring-1 ring-inset ring-white/5">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-sidebar-elevated text-sidebar-accent-foreground">
                   <pillar.icon className="h-4 w-4" />
                 </span>
                 <div>
-                  <div className="text-[13px] font-bold text-sidebar-accent-foreground">{pillar.title}</div>
+                  <div className="text-[13px] font-semibold text-sidebar-accent-foreground">
+                    {pillar.title}
+                  </div>
                   <div className="text-[12px] font-medium leading-relaxed text-sidebar-foreground">
                     {pillar.body}
                   </div>
@@ -103,27 +86,24 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
           </ul>
         </div>
 
-        <div className="relative flex items-center gap-2 text-[11.5px] font-semibold text-sidebar-foreground">
+        <div className="relative flex items-center gap-2 text-[11.5px] font-medium text-sidebar-foreground">
           <BadgeCheck className="h-4 w-4 text-success" />
           Every AI output is logged, reviewed and attributable.
         </div>
       </div>
 
-      {/* Form panel */}
+      {/* Form panel — material card on a hairline-separated canvas */}
       <div className="relative flex flex-1 flex-col items-center justify-center px-5 py-10 sm:px-8">
         <div className="w-full max-w-[440px]">
           <div className="mb-6 flex items-center gap-2.5 lg:hidden">
-            <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-brand text-[13px] font-extrabold text-primary-foreground shadow-glow">
-              <span aria-hidden className="absolute inset-0 bg-gradient-brand bg-[length:200%_200%] animate-gradient-shift" />
-              <span className="relative">T3</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground">
+              T3
             </span>
-            <span className="text-[15px] font-extrabold text-foreground">Talent360 AI</span>
+            <span className="text-[15px] font-bold text-foreground">Talent360 AI</span>
           </div>
 
-          <div className="talent-glass rounded-2xl border border-border p-6 shadow-panel sm:p-8">
-            <h1 className="text-[23px] font-extrabold leading-tight tracking-tight text-foreground">
-              {title}
-            </h1>
+          <div className="talent-glass rounded-3xl border border-border p-6 shadow-panel sm:p-8">
+            <h1 className="text-[22px] font-bold leading-tight tracking-tight text-foreground">{title}</h1>
             <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-muted-foreground">{subtitle}</p>
 
             <div className="mt-6">{children}</div>

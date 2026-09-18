@@ -153,31 +153,22 @@ export default function CommandCenterPage() {
         />
       </div>
 
-      {/* Workforce pulse banner */}
-      <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-brand p-5 shadow-glow md:p-6">
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl"
-        />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-black/10 blur-3xl"
-        />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-5">
-          <div className="min-w-0 max-w-xl">
-            <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/80">
-              <Sparkles className="h-3.5 w-3.5" />
-              Workforce pulse
-            </div>
-            <h2 className="mt-2 text-[20px] font-extrabold leading-tight text-white">
+      {/* Workforce pulse — iOS material banner */}
+      <section className="talent-tile flex flex-col gap-4 overflow-hidden p-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary-soft-foreground">
+            <Sparkles className="h-[18px] w-[18px]" />
+          </span>
+          <div>
+            <div className="talent-label">Workforce pulse</div>
+            <h2 className="mt-0.5 text-[17px] font-bold leading-tight text-foreground">
               {data.kpis.pendingRecommendations > 0
                 ? `${data.kpis.pendingRecommendations} recommendation${
                     data.kpis.pendingRecommendations === 1 ? "" : "s"
                   } are waiting for a human decision.`
                 : "The queue is clear — every recommendation has been decided."}
             </h2>
-            <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-white/85">
+            <p className="mt-1 text-[12.5px] font-medium leading-relaxed text-muted-foreground">
               {data.kpis.highRisk > 0
                 ? `${data.kpis.highRisk} people are flagged high risk and ${data.kpis.openTasks} workflow task${
                     data.kpis.openTasks === 1 ? " is" : "s are"
@@ -187,24 +178,24 @@ export default function CommandCenterPage() {
                   } tracking outcomes.`}
             </p>
           </div>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              to="/app/action-center"
-              className="inline-flex h-9 items-center gap-2 rounded-xl bg-white px-4 text-[13px] font-bold text-primary shadow-sm transition-transform active:scale-[0.98] hover:-translate-y-0.5"
-            >
-              Review queue
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => void handleRefresh()}
-              className="inline-flex h-9 items-center gap-2 rounded-xl bg-white/15 px-4 text-[13px] font-bold text-white ring-1 ring-inset ring-white/30 backdrop-blur transition-colors hover:bg-white/25"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Refresh
-            </button>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/app/action-center"
+            className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-primary px-4 text-[13px] font-semibold text-primary-foreground transition-transform active:scale-[0.97]"
+          >
+            Review queue
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => void handleRefresh()}
+            className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-secondary px-4 text-[13px] font-semibold text-secondary-foreground transition-transform active:scale-[0.97]"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </button>
         </div>
       </section>
 

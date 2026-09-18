@@ -34,7 +34,7 @@ export function SparklineChart({
   return (
     <div className={cn("w-full", className)} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 200 }}>
-        <AreaChart data={data} margin={{ top: 6, right: showAxis ? 10 : 0, left: showAxis ? 10 : 0, bottom: showAxis ? 4 : 0 }}>
+        <AreaChart data={data} margin={{ top: 6, right: showAxis ? 14 : 0, left: showAxis ? 14 : 0, bottom: showAxis ? 4 : 0 }}>
           <defs>
             <linearGradient id={`spark-${id}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.35} />
