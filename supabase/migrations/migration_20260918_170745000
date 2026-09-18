@@ -1,0 +1,73 @@
+-- Talent360 AI :: Interview practice sessions (self-serve, AI-driven)
+
+create table public.talent_practice_sessions (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  user_id uuid references public.talent_profiles(id) on delete set null,
+  role_title text not null,
+  job_description text,
+  focus_areas text[] not null default '{}',
+  question_count integer not null default 5,
+  status text not null default 'in_progress',
+  overall_score numeric,
+  summary jsonb,
+  started_at timestamptz not null default now(),
+  completed_at timestamptz,
+  constraint talent_practice_sessions_status_check check (status in ('in_progress', 'completed'))
+);
+
+create table public.talent_practice_questions (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  session_id uuid not null references public.talent_practice_sessions(id) on delete cascade,
+  position integer not null,
+  question_text text not null,
+  category text not null default 'Technical Knowledge',
+  rubric text,
+  answer_text text,
+  feedback jsonb,
+  scored_at timestamptz,
+  unique (session_id, position)
+);
+
+-- helpers used by RLS below
+create or replace function public.talent_practice_owns_session(target uuid)
+returns boolean language sql stable security definer set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from public.talent_practice_sessions s
+    where s.id = target and s.user_id = auth.uid()
+  )
+$$;
+
+grant execute on function public.talent_practice_owns_session(uuid) to authenticated;
+
+revoke all on public.talent_practice_sessions, public.talent_practice_questions from anon;
+grant select, insert, update, delete on public.talent_practice_sessions,
+  public.talent_practice_questions to authenticated;
+
+alter table public.talent_practice_sessions enable row level security;
+create policy talent_practice_sessions_select on public.talent_practice_sessions for select to authenticated
+  using (org_id = public.talent_current_org_id()
+    and (user_id = auth.uid() or public.talent_is_hr()));
+create policy talent_practice_sessions_insert on public.talent_practice_sessions for insert to authenticated
+  with check (org_id = public.talent_current_org_id() and user_id = auth.uid());
+create policy talent_practice_sessions_update on public.talent_practice_sessions for update to authenticated
+  using (org_id = public.talent_current_org_id() and user_id = auth.uid())
+  with check (org_id = public.talent_current_org_id() and user_id = auth.uid());
+create policy talent_practice_sessions_delete on public.talent_practice_sessions for delete to authenticated
+  using (org_id = public.talent_current_org_id() and user_id = auth.uid());
+
+alter table public.talent_practice_questions enable row level security;
+create policy talent_practice_questions_select on public.talent_practice_questions for select to authenticated
+  using (org_id = public.talent_current_org_id()
+    and (public.talent_practice_owns_session(session_id) or public.talent_is_hr()));
+create policy talent_practice_questions_insert on public.talent_practice_questions for insert to authenticated
+  with check (org_id = public.talent_current_org_id() and public.talent_practice_owns_session(session_id));
+create policy talent_practice_questions_update on public.talent_practice_questions for update to authenticated
+  using (org_id = public.talent_current_org_id() and public.talent_practice_owns_session(session_id))
+  with check (org_id = public.talent_current_org_id() and public.talent_practice_owns_session(session_id));
+
+create index talent_practice_sessions_user_idx on public.talent_practice_sessions(user_id, started_at desc);
+create index talent_practice_sessions_org_idx on public.talent_practice_sessions(org_id, status);
+create index talent_practice_questions_session_idx on public.talent_practice_questions(session_id, position);

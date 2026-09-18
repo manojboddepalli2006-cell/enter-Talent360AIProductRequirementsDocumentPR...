@@ -4640,6 +4640,116 @@ export type Database = {
           },
         ]
       }
+      talent_practice_questions: {
+        Row: {
+          answer_text: string | null
+          category: string
+          feedback: Json | null
+          id: string
+          org_id: string
+          position: number
+          question_text: string
+          rubric: string | null
+          scored_at: string | null
+          session_id: string
+        }
+        Insert: {
+          answer_text?: string | null
+          category?: string
+          feedback?: Json | null
+          id?: string
+          org_id: string
+          position: number
+          question_text: string
+          rubric?: string | null
+          scored_at?: string | null
+          session_id: string
+        }
+        Update: {
+          answer_text?: string | null
+          category?: string
+          feedback?: Json | null
+          id?: string
+          org_id?: string
+          position?: number
+          question_text?: string
+          rubric?: string | null
+          scored_at?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_practice_questions_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_practice_questions_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "talent_practice_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_practice_sessions: {
+        Row: {
+          completed_at: string | null
+          focus_areas: string[]
+          id: string
+          job_description: string | null
+          org_id: string
+          overall_score: number | null
+          question_count: number
+          role_title: string
+          started_at: string
+          status: string
+          summary: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          focus_areas?: string[]
+          id?: string
+          job_description?: string | null
+          org_id: string
+          overall_score?: number | null
+          question_count?: number
+          role_title: string
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          focus_areas?: string[]
+          id?: string
+          job_description?: string | null
+          org_id?: string
+          overall_score?: number | null
+          question_count?: number
+          role_title?: string
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_practice_sessions_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_practice_sessions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "talent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       talent_profiles: {
         Row: {
           avatar_url: string | null
@@ -4960,6 +5070,10 @@ export type Database = {
         Returns: string
       }
       talent_org_has_members: {
+        Args: { target: string }
+        Returns: boolean
+      }
+      talent_practice_owns_session: {
         Args: { target: string }
         Returns: boolean
       }

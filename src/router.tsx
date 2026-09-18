@@ -27,6 +27,8 @@ import AdminConsolePage from "./pages/admin";
 import AdminUsersPage from "./pages/admin/users";
 import AdminIntegrationsPage from "./pages/admin/integrations";
 import AdminUsagePage from "./pages/admin/usage";
+import PracticePage from "./pages/practice";
+import PracticeSessionPage from "./pages/practice/session";
 import SettingsPage from "./pages/settings";
 import NotFound from "./pages/NotFound";
 
@@ -230,6 +232,8 @@ export const routers = [
           </RequireRole>
         ),
       },
+      { path: "practice", name: "practice", element: <PracticePage /> },
+      { path: "practice/:sessionId", name: "practice-session", element: <PracticeSessionPage /> },
       { path: "settings", name: "settings", element: <SettingsPage /> },
     ],
   },

@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
+  MicVocal,
   BrainCircuit,
   Briefcase,
   Building2,
@@ -70,6 +71,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { key: "team", label: "My Team", to: "/app/team", icon: UsersRound, capabilities: ["view_team"] },
       { key: "my-profile", label: "My Profile", to: "/app/my-profile", icon: UserCircle, capabilities: ["view_self"] },
       { key: "onboarding", label: "Onboarding", to: "/app/onboarding", icon: ClipboardList },
+      { key: "practice", label: "Interview Prep", to: "/app/practice", icon: MicVocal },
       { key: "my-tasks", label: "My Tasks", to: "/app/tasks", icon: BadgeCheck, capabilities: ["view_self"] },
     ],
   },
