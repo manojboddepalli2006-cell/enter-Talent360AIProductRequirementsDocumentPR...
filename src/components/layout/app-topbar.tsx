@@ -4,6 +4,8 @@ import { NAV_ITEMS } from "@/components/layout/nav-config";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { useTheme } from "@/hooks/use-theme";
 import { useProfile } from "@/hooks/use-profile";
+import { useAiEngineState } from "@/hooks/use-ai-engine-state";
+import { AiStatusPill } from "@/components/brand/live-ai-orb";
 import { initialsOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +18,7 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
   const { pathname } = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { profile, org } = useProfile();
+  const { state: aiState } = useAiEngineState();
 
   const current =
     NAV_ITEMS.filter((item) => pathname === item.to || pathname.startsWith(`${item.to}/`)).sort(
@@ -55,14 +58,7 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
-        <div className="hidden items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-1.5 xl:flex">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-          </span>
-          <span className="text-[11.5px] font-bold text-foreground">AI Engine</span>
-          <span className="text-[11px] font-medium text-success-soft-foreground">Operational</span>
-        </div>
+        <AiStatusPill state={aiState} className="hidden xl:inline-flex" />
 
         <button
           type="button"
@@ -101,7 +97,7 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
           <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-ai text-[9px] font-extrabold text-primary-foreground">
             {(org?.name ?? "T3").slice(0, 2).toUpperCase()}
           </span>
-          <span className="hidden max-w-[90px] truncate text-[12px] font-bold text-foreground md:block">
+          <span className="hidden max-w-[130px] truncate text-[12px] font-bold text-foreground lg:block">
             {org?.name ?? "Workspace"}
           </span>
         </button>

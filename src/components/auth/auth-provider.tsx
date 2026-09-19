@@ -11,6 +11,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshProfile = useCallback(() => setProfileVersion((value) => value + 1), []);
 
   useEffect(() => {
+    // A session can also arrive in the URL (magic link / handoff). Hold the app in
+    // its loading state briefly so the guard does not bounce the visitor to the
+    // sign-in screen before the client has consumed that token.
+    const hashHasSession =
+      typeof window !== "undefined" &&
+      (window.location.hash.includes("access_token") || window.location.hash.includes("refresh_token"));
+
+    let releaseTimer: number | undefined;
+    if (hashHasSession) {
+      releaseTimer = window.setTimeout(() => setLoading(false), 2500);
+    }
+
     // Register the listener BEFORE restoring the session, otherwise the initial
     // restore can complete first and we would miss the event entirely.
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
@@ -30,10 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(data.session ?? null);
         setUser(data.session?.user ?? null);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        // Keep waiting when a URL session is still being consumed.
+        if (!hashHasSession) setLoading(false);
+      });
 
     return () => {
       subscription.subscription.unsubscribe();
+      if (releaseTimer) window.clearTimeout(releaseTimer);
     };
   }, []);
 

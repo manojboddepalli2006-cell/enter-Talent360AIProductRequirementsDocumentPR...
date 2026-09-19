@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { BrainCircuit, Briefcase, LayoutDashboard, MessagesSquare, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions, type Capability } from "@/hooks/use-permissions";
+import { roleHome } from "@/lib/domain";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -22,9 +23,13 @@ const TABS: Array<{ to: string; label: string; icon: LucideIcon; capabilities: C
 ];
 
 export function MobileTabBar() {
-  const { can } = usePermissions();
+  const { can, role } = usePermissions();
 
-  const visible = TABS.filter(
+  // The first tab is the signed-in role's own dashboard, so each portal opens
+  // on its own identity rather than a shared screen.
+  const tabs = TABS.map((tab, index) => (index === 0 ? { ...tab, to: roleHome(role) } : tab));
+
+  const visible = tabs.filter(
     (tab) => !tab.capabilities.length || tab.capabilities.some((capability) => can(capability)),
   );
 

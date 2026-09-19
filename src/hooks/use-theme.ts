@@ -1,28 +1,72 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAuthContext } from "@/hooks/use-auth-context";
 
-export type ThemeMode = "light" | "dark";
+export type ThemePreference = "dark" | "light" | "system";
+export type ResolvedTheme = "dark" | "light";
 
-const STORAGE_KEY = "talent360-theme";
+const LEGACY_KEY = "talent360-theme";
 
-function readInitialTheme(): ThemeMode {
-  if (typeof window === "undefined") return "light";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "light" ? "light" : "dark";
+function storageKey(userId: string | null | undefined): string {
+  return `talent360-theme:${userId ?? "device"}`;
 }
 
-/** Light/dark toggle driven by a class on <html> plus localStorage persistence. */
+function readPreference(key: string): ThemePreference {
+  if (typeof window === "undefined") return "dark";
+  const stored = window.localStorage.getItem(key) ?? window.localStorage.getItem(LEGACY_KEY);
+  return stored === "light" || stored === "system" || stored === "dark" ? stored : "dark";
+}
+
+function systemPrefersDark(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return true;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+/**
+ * Theme controller: Dark / Light / System, remembered per user.
+ *
+ * The dark palette is the base (`:root`), the light palette is applied by the
+ * `light` class, and `dark` is also toggled so component-level `dark:` variants
+ * stay in sync.
+ */
 export function useTheme() {
-  const [theme, setTheme] = useState<ThemeMode>(readInitialTheme);
+  const { user } = useAuthContext();
+  const key = storageKey(user?.id);
+
+  const [preference, setPreferenceState] = useState<ThemePreference>(() => readPreference(key));
+  const [systemDark, setSystemDark] = useState<boolean>(systemPrefersDark);
+
+  // Re-read the preference when the account changes (per-user preference).
+  useEffect(() => {
+    setPreferenceState(readPreference(key));
+  }, [key]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const query = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (event: MediaQueryListEvent) => setSystemDark(event.matches);
+    query.addEventListener("change", handler);
+    return () => query.removeEventListener("change", handler);
+  }, []);
+
+  const resolved: ResolvedTheme = preference === "system" ? (systemDark ? "dark" : "light") : preference;
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    window.localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
+    root.classList.toggle("light", resolved === "light");
+    root.classList.toggle("dark", resolved === "dark");
+    root.style.colorScheme = resolved;
+    window.localStorage.setItem(key, preference);
+  }, [resolved, preference, key]);
+
+  const setPreference = useCallback((next: ThemePreference) => setPreferenceState(next), []);
 
   const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
-  }, []);
+    setPreferenceState((current) => {
+      const currentResolved = current === "system" ? (systemDark ? "dark" : "light") : current;
+      return currentResolved === "dark" ? "light" : "dark";
+    });
+  }, [systemDark]);
 
-  return { theme, setTheme, toggleTheme };
+  // Backwards-compatible `theme` value for existing callers.
+  return { preference, resolved, theme: resolved, setPreference, toggleTheme };
 }

@@ -33,6 +33,10 @@ import VideoPracticeSessionPage from "./pages/practice/video-session";
 import SettingsPage from "./pages/settings";
 import NotificationsPage from "./pages/notifications";
 import AnalyticsPage from "./pages/analytics";
+import OrgCommandCenterPage from "./pages/org";
+import ManagerIntelligencePage from "./pages/manager";
+import EmployeeHomePage from "./pages/employee";
+import { PortalGate } from "./components/auth/portal-gate";
 import PortalPage from "./pages/portal";
 import NotFound from "./pages/NotFound";
 
@@ -53,6 +57,26 @@ export const routers = [
     element: <SignupPage />,
   },
   {
+    path: "/org",
+    name: "portal-org",
+    element: <PortalGate portal="org" />,
+  },
+  {
+    path: "/hr",
+    name: "portal-hr",
+    element: <PortalGate portal="hr" />,
+  },
+  {
+    path: "/manager",
+    name: "portal-manager",
+    element: <PortalGate portal="manager" />,
+  },
+  {
+    path: "/employee",
+    name: "portal-employee",
+    element: <PortalGate portal="employee" />,
+  },
+  {
     path: "/portal",
     name: "portal",
     element: <PortalPage />,
@@ -67,6 +91,33 @@ export const routers = [
     ),
     children: [
       { index: true, name: "app-index", element: <RoleRedirect /> },
+      {
+        path: "org",
+        name: "org-console",
+        element: (
+          <RequireRole capabilities={["manage_admin"]}>
+            <OrgCommandCenterPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "my-team",
+        name: "manager-intelligence",
+        element: (
+          <RequireRole capabilities={["view_team"]}>
+            <ManagerIntelligencePage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "my-home",
+        name: "employee-home",
+        element: (
+          <RequireRole capabilities={["view_self"]}>
+            <EmployeeHomePage />
+          </RequireRole>
+        ),
+      },
       {
         path: "command-center",
         name: "command-center",

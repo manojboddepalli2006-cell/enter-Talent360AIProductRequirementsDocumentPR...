@@ -49,16 +49,38 @@ export function roleMeta(role: string | null | undefined): RoleMeta | undefined 
   return ROLES.find((item) => item.key === role);
 }
 
-/** Landing route per role, so each role opens on something it can actually use. */
+/**
+ * Role-specific portal home. Each role gets its own dashboard identity:
+ * Org Admin → Organization Intelligence, HR → Workforce Intelligence,
+ * Manager → My Team Intelligence, Employee → My Growth Intelligence.
+ */
+export const PORTALS: Record<string, { path: string; label: string; dashboard: string }> = {
+  org_admin: { path: "/org", label: "Organization", dashboard: "Organization Intelligence" },
+  hr_admin: { path: "/hr", label: "Workforce", dashboard: "Workforce Intelligence" },
+  manager: { path: "/manager", label: "Team", dashboard: "My Team Intelligence" },
+  employee: { path: "/employee", label: "Growth", dashboard: "My Growth Intelligence" },
+};
+
 export function roleHome(role: string | null | undefined): string {
   switch (role) {
     case "employee":
-      return "/app/my-profile";
+      return "/app/my-home";
     case "manager":
-      return "/app/team";
+      return "/app/my-team";
+    case "org_admin":
+      return "/app/org";
     default:
       return "/app/command-center";
   }
+}
+
+/** Portal root path for a role (used by the portal gate and the org selector). */
+export function rolePortalPath(role: string | null | undefined): string {
+  return PORTALS[role ?? ""]?.path ?? "/app";
+}
+
+export function dashboardTitle(role: string | null | undefined): string {
+  return PORTALS[role ?? ""]?.dashboard ?? "Workforce Intelligence";
 }
 
 export const PIPELINE_STAGES = [

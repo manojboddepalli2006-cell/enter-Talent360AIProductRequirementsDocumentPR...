@@ -8,6 +8,10 @@ import { usePermissions } from "@/hooks/use-permissions";
 import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "@/hooks/use-session";
 import { useAuthContext } from "@/hooks/use-auth-context";
+import { useAiEngineState } from "@/hooks/use-ai-engine-state";
+import { useTheme } from "@/hooks/use-theme";
+import { AiStatusPill } from "@/components/brand/live-ai-orb";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/domain";
 import { initialsOf } from "@/lib/format";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -32,6 +36,8 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
   const { profile, org } = useProfile();
   const { user } = useSession();
   const { signOut } = useAuthContext();
+  const { state: aiState } = useAiEngineState();
+  const { preference, setPreference } = useTheme();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     NAV_GROUPS.reduce<Record<string, boolean>>((acc, group) => {
@@ -165,17 +171,38 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
           ) : null}
         </button>
 
-        <div className={cn("flex items-center gap-2 rounded-xl border border-border bg-card/40 px-3 py-2", collapsed && "justify-center")}>
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-          </span>
-          {!collapsed ? (
-            <span className="min-w-0 flex-1">
-              <span className="block text-[11.5px] font-bold text-sidebar-accent-foreground">AI Engine</span>
-              <span className="block text-[10px] font-medium text-sidebar-foreground">Operational</span>
-            </span>
-          ) : null}
+        {collapsed ? (
+          <div className="flex justify-center">
+            <AiStatusPill state={aiState} className="px-1.5 py-1 [&>span:not(:first-child)]:hidden" />
+          </div>
+        ) : (
+          <AiStatusPill state={aiState} className="w-full" />
+        )}
+
+        {/* Theme preference */}
+        <div className="flex items-center gap-1 rounded-xl border border-border bg-card/40 p-1">
+          {([
+            { key: "dark", label: "Dark", icon: Moon },
+            { key: "light", label: "Light", icon: Sun },
+            { key: "system", label: "System", icon: Monitor },
+          ] as const).map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => setPreference(option.key)}
+              title={`${option.label} theme`}
+              aria-pressed={preference === option.key}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-[10.5px] font-bold transition-colors",
+                preference === option.key
+                  ? "bg-gradient-ai text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <option.icon className="h-3 w-3" />
+              {!collapsed ? option.label : null}
+            </button>
+          ))}
         </div>
 
         <div className="flex items-center gap-2">

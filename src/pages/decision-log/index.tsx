@@ -10,7 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, LoadingState } from "@/components/common/states";
 import { downloadCsv } from "@/lib/csv";
+import { WorkflowVisualization } from "@/components/common/workflow-visualization";
+import { ChevronDown } from "lucide-react";
+import { parseStructuredAiResult } from "@/lib/ai-parse";
 import { formatDateTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface AuditRow {
   id: string;
@@ -46,20 +50,47 @@ const ACTION_TONE: Record<string, "success" | "danger" | "info" | "primary" | "n
   "workflow.created": "primary",
 };
 
-async function listAudit(): Promise<AuditRow[]> {
-  const { data, error } = await supabase
-    .from("talent_audit_log")
-    .select("id, actor_id, actor_name, action, entity_type, entity_id, metadata, created_at")
-    .order("created_at", { ascending: false })
-    .limit(500);
+interface EnrichedAuditRow extends AuditRow {
+  recommendation?: {
+    id: string;
+    module: string;
+    status: string;
+    title: string;
+    recommendation: unknown;
+  } | null;
+}
 
-  if (error) throw new Error(error.message);
-  return (data ?? []) as AuditRow[];
+async function listAudit(): Promise<EnrichedAuditRow[]> {
+  const [auditResult, recsResult] = await Promise.all([
+    supabase
+      .from("talent_audit_log")
+      .select("id, actor_id, actor_name, action, entity_type, entity_id, metadata, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500),
+    supabase.from("talent_ai_recommendations").select("id, module, status, title, recommendation"),
+  ]);
+
+  if (auditResult.error) throw new Error(auditResult.error.message);
+
+  const byId = (recsResult.data ?? []).reduce<Record<string, EnrichedAuditRow["recommendation"]>>(
+    (acc, rec) => {
+      acc[rec.id] = rec;
+      return acc;
+    },
+    {},
+  );
+
+  return ((auditResult.data ?? []) as AuditRow[]).map((row) => ({
+    ...row,
+    recommendation: row.entity_id ? (byId[row.entity_id] ?? null) : null,
+  }));
 }
 
 export default function DecisionLogPage() {
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("decisions");
+  const [moduleFilter, setModuleFilter] = useState("all");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const query = useQuery({ queryKey: ["talent360-audit"], queryFn: listAudit });
   const rows = useMemo(() => query.data ?? [], [query.data]);
@@ -84,6 +115,7 @@ export default function DecisionLogPage() {
         return false;
       if (actionFilter === "ai" && !row.action.includes("interview") && !row.action.includes("match") && !row.action.includes("risk") && !row.action.includes("development"))
         return false;
+      if (moduleFilter !== "all" && row.recommendation?.module !== moduleFilter) return false;
       if (!term) return true;
       return (
         row.action.toLowerCase().includes(term) ||
@@ -91,7 +123,7 @@ export default function DecisionLogPage() {
         JSON.stringify(row.metadata ?? {}).toLowerCase().includes(term)
       );
     });
-  }, [rows, search, actionFilter]);
+  }, [rows, search, actionFilter, moduleFilter]);
 
   const handleExport = () => {
     downloadCsv(
@@ -182,32 +214,183 @@ export default function DecisionLogPage() {
                 </tr>
               </thead>
               <tbody>
-                {visible.slice(0, 200).map((row) => (
-                  <tr key={row.id} className="border-b border-border last:border-0 align-top">
-                    <td className="py-3 pl-4 pr-4 text-[12px] font-semibold text-muted-foreground">
-                      {formatDateTime(row.created_at)}
-                    </td>
-                    <td className="py-3 pr-4 text-[12.5px] font-semibold text-foreground">
-                      {row.actor_name ?? "System"}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <StatusPill tone={ACTION_TONE[row.action] ?? "neutral"}>
-                        {ACTION_LABEL[row.action] ?? row.action}
-                      </StatusPill>
-                    </td>
-                    <td className="py-3 pr-4 text-[11.5px] font-medium text-muted-foreground">
-                      {row.entity_type}
-                      {row.entity_id ? (
-                        <span className="block truncate font-mono text-[10.5px]">{row.entity_id.slice(0, 8)}…</span>
+                {visible.slice(0, 200).map((row) => {
+                  const isOpen = expanded === row.id;
+                  const structured = row.recommendation
+                    ? parseStructuredAiResult(JSON.stringify(row.recommendation.recommendation))
+                    : null;
+                  const decision = row.action;
+                  const approved = decision === "recommendation.approved" || decision === "recommendation.modified";
+                  const rejected = decision === "recommendation.rejected";
+                  const workflowRef = row.recommendation
+                    ? `Enter Pro #WF${String(row.recommendation.id).slice(0, 5).toUpperCase()}`
+                    : "—";
+                  const outcome = (row.metadata as { resolved?: boolean })?.resolved;
+
+                  return (
+                    <>
+                      <tr key={row.id} className="border-b border-border align-top last:border-0">
+                        <td className="py-3 pl-4 pr-2">
+                          <button
+                            type="button"
+                            aria-expanded={isOpen}
+                            aria-label={isOpen ? "Collapse row" : "Expand row"}
+                            onClick={() => setExpanded(isOpen ? null : row.id)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+                          >
+                            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-180")} />
+                          </button>
+                        </td>
+                        <td className="py-3 pr-4 text-[12px] font-semibold text-muted-foreground">
+                          {formatDateTime(row.created_at)}
+                        </td>
+                        <td className="py-3 pr-4 text-[12.5px] font-semibold text-foreground">
+                          {row.actor_name ?? "System"}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <StatusPill tone={ACTION_TONE[row.action] ?? "neutral"}>
+                            {ACTION_LABEL[row.action] ?? row.action}
+                          </StatusPill>
+                        </td>
+                        <td className="py-3 pr-4 text-[11.5px] font-medium text-muted-foreground">
+                          {row.recommendation?.module ?? row.entity_type}
+                          {row.entity_id ? (
+                            <span className="block truncate font-mono text-[10.5px]">{row.entity_id.slice(0, 8)}…</span>
+                          ) : null}
+                        </td>
+                        <td className="py-3 pr-4 text-[11.5px] font-semibold text-foreground">
+                          {row.recommendation?.title ?? "—"}
+                        </td>
+                        <td className="py-3 pr-4 text-[11.5px] font-medium text-muted-foreground">{workflowRef}</td>
+                        <td className="py-3 pr-4">
+                          <StatusPill
+                            tone={outcome === true ? "success" : outcome === false ? "warning" : "neutral"}
+                          >
+                            {outcome === true ? "Resolved" : outcome === false ? "Unresolved" : "Pending"}
+                          </StatusPill>
+                        </td>
+                      </tr>
+
+                      {isOpen ? (
+                        <tr key={`${row.id}-detail`} className="border-b border-border bg-muted/20">
+                          <td colSpan={8} className="px-4 py-4">
+                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                              <div className="flex flex-col gap-3">
+                                <div>
+                                  <span className="talent-label">AI signals</span>
+                                  <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                                    {(structured?.reasoning_signals ?? []).length ? (
+                                      structured!.reasoning_signals.map((signal) => (
+                                        <StatusPill
+                                          key={signal.factor}
+                                          tone={
+                                            signal.direction === "down"
+                                              ? "danger"
+                                              : signal.direction === "up"
+                                                ? "success"
+                                                : "neutral"
+                                          }
+                                        >
+                                          {signal.factor} {signal.direction === "down" ? "↓" : signal.direction === "up" ? "↑" : "→"}
+                                        </StatusPill>
+                                      ))
+                                    ) : (
+                                      <span className="text-[11.5px] font-medium text-muted-foreground">
+                                        No signal detail recorded for this entry.
+                                      </span>
+                                    )}
+                                  </ul>
+                                </div>
+
+                                {structured?.explanation ? (
+                                  <div>
+                                    <span className="talent-label">Explanation</span>
+                                    <p className="mt-1 text-[12px] font-medium leading-relaxed text-muted-foreground">
+                                      {structured.explanation}
+                                    </p>
+                                  </div>
+                                ) : null}
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <span className="talent-label">Confidence</span>
+                                    <p className="mt-1 text-[12.5px] font-bold text-foreground">
+                                      {structured?.confidence == null
+                                        ? "—"
+                                        : `${Math.round(structured.confidence * 100)}%`}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <span className="talent-label">Human decision</span>
+                                    <p className="mt-1 text-[12.5px] font-bold text-foreground">
+                                      {ACTION_LABEL[row.action] ?? row.action}
+                                      {row.actor_name ? ` · ${row.actor_name}` : ""}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {typeof (row.metadata as { reason?: string })?.reason === "string" ? (
+                                  <div>
+                                    <span className="talent-label">Rejection reason</span>
+                                    <p className="mt-1 text-[12px] font-medium italic leading-relaxed text-muted-foreground">
+                                      {(row.metadata as { reason?: string }).reason}
+                                    </p>
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              <div className="flex flex-col gap-3">
+                                <span className="talent-label">AI → Human → Enter Pro → Outcome</span>
+                                <div className="overflow-x-auto">
+                                  <div className="min-w-[520px]">
+                                    <WorkflowVisualization
+                                      steps={[
+                                        { key: "ai", label: "AI Insight", state: "done" },
+                                        {
+                                          key: "review",
+                                          label: "Human Review",
+                                          state: rejected || approved ? "done" : "active",
+                                        },
+                                        {
+                                          key: "approve",
+                                          label: "Approved",
+                                          state: approved ? "done" : "pending",
+                                        },
+                                        {
+                                          key: "flow",
+                                          label: "Enter Pro",
+                                          state: approved ? "done" : "pending",
+                                        },
+                                        {
+                                          key: "task",
+                                          label: "Task Created",
+                                          state: approved ? "active" : "pending",
+                                        },
+                                        { key: "follow", label: "Follow-up", state: "pending" },
+                                        {
+                                          key: "outcome",
+                                          label: "Outcome",
+                                          state: outcome === true ? "done" : "pending",
+                                        },
+                                      ]}
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-[11px] font-medium leading-relaxed text-muted-foreground">
+                                  {rejected
+                                    ? "Rejected by a reviewer — no workflow was created and nothing was applied to the record."
+                                    : approved
+                                      ? "Approved by a reviewer — Enter Pro created the workflow and its tasks; the outcome is measured later."
+                                      : "Waiting for a human decision."}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
                       ) : null}
-                    </td>
-                    <td className="max-w-[420px] py-3 pr-4">
-                      <span className="line-clamp-2 text-[11.5px] font-medium leading-snug text-muted-foreground">
-                        {JSON.stringify(row.metadata ?? {})}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                    </>
+                  );
+                })}
               </tbody>
             </table>
           </div>
