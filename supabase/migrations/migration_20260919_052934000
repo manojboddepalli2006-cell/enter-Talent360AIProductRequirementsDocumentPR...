@@ -1,0 +1,39 @@
+-- Notifications + candidate portal access codes
+
+create table public.talent_notifications (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.talent_orgs(id) on delete cascade,
+  user_id uuid references public.talent_profiles(id) on delete cascade,
+  type text not null default 'info',
+  title text not null,
+  body text,
+  link text,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.talent_candidates
+  add column if not exists portal_code text;
+
+create unique index talent_notifications_user_idx on public.talent_notifications(user_id, created_at desc);
+create index talent_notifications_org_idx on public.talent_notifications(org_id, created_at desc);
+
+revoke all on public.talent_notifications from anon;
+grant select, insert, update on public.talent_notifications to authenticated;
+
+alter table public.talent_notifications enable row level security;
+create policy talent_notifications_select on public.talent_notifications for select to authenticated
+  using (org_id = public.talent_current_org_id()
+    and (user_id = auth.uid() or public.talent_is_hr()));
+create policy talent_notifications_insert on public.talent_notifications for insert to authenticated
+  with check (org_id = public.talent_current_org_id());
+create policy talent_notifications_update on public.talent_notifications for update to authenticated
+  using (org_id = public.talent_current_org_id()
+    and (user_id = auth.uid() or public.talent_is_hr()))
+  with check (org_id = public.talent_current_org_id()
+    and (user_id = auth.uid() or public.talent_is_hr()));
+
+-- Give seeded candidates a portal code so the candidate portal demo works.
+update public.talent_candidates
+set portal_code = substr(md5(email || 'talent360-portal')::text, 1, 10)
+where portal_code is null;

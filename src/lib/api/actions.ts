@@ -209,6 +209,53 @@ async function createWorkflowAndTasks(input: ReviewActionInput, actions: string[
     metadata: { type: workflowTypeFor(recommendation.module), tasks: taskRows.length },
   });
 
+  // Notify the people involved: the assignee (if their account is linked) and HR.
+  const notificationRows: Database["public"]["Tables"]["talent_notifications"]["Insert"][] = [];
+
+  if (recipient.employeeId) {
+    const { data: assignee } = await supabase
+      .from("talent_employees")
+      .select("user_id, full_name")
+      .eq("id", recipient.employeeId)
+      .maybeSingle();
+    if (assignee?.user_id) {
+      notificationRows.push({
+        org_id: orgId,
+        user_id: assignee.user_id,
+        type: "task",
+        title: "A task was assigned to you",
+        body: `${assignee.full_name}, a new task is waiting: "${
+          taskRows[0]?.title ?? "Review and agree next steps"
+        }".`,
+        link: "/app/tasks",
+      });
+    }
+  }
+
+  const { data: hrProfiles } = await supabase
+    .from("talent_profiles")
+    .select("id")
+    .in("role", ["hr_admin", "org_admin"]);
+
+  if (hrProfiles?.length) {
+    notificationRows.push(
+      ...hrProfiles.map((profile) => ({
+        org_id: orgId,
+        user_id: profile.id,
+        type: "task",
+        title: "Workflow created",
+        body: `A workflow "${workflowTypeFor(recommendation.module)}" is now active with ${taskRows.length} task${
+          taskRows.length === 1 ? "" : "s"
+        }.`,
+        link: "/app/action-center",
+      })),
+    );
+  }
+
+  if (notificationRows.length) {
+    await supabase.from("talent_notifications").insert(notificationRows);
+  }
+
   return { status: "approved", workflowId: workflow.id, taskCount: taskRows.length, warning: null };
 }
 

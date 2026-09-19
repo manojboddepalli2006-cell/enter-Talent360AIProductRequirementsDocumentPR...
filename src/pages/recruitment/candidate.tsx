@@ -343,6 +343,31 @@ export default function CandidatePage() {
                 </dd>
               </div>
               <div>
+                <dt className="talent-label">Portal code</dt>
+                <dd className="mt-1 flex items-center gap-2">
+                  <code className="rounded-md bg-muted px-2 py-0.5 text-[12px] font-bold text-foreground">
+                    {(candidate as unknown as { portal_code?: string | null })?.portal_code ?? "—"}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const code = (candidate as unknown as { portal_code?: string | null })?.portal_code;
+                      if (code) {
+                        void navigator.clipboard?.writeText(`${window.location.origin}/portal`);
+                        void navigator.clipboard?.writeText(code);
+                      }
+                    }}
+                    className="text-[11px] font-semibold text-primary hover:underline"
+                  >
+                    Copy
+                  </button>
+                </dd>
+                <p className="mt-1 text-[10.5px] font-medium leading-snug text-muted-foreground">
+                  Share the portal link ({window.location.origin}/portal) and this code so the candidate can track
+                  their application and answer interview questions.
+                </p>
+              </div>
+              <div>
                 <dt className="talent-label">Decision</dt>
                 <dd className="mt-0.5 text-[12.5px] font-semibold text-foreground">
                   {application.decided_at

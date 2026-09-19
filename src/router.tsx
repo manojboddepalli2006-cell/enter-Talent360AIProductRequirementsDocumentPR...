@@ -31,6 +31,8 @@ import PracticePage from "./pages/practice";
 import PracticeSessionPage from "./pages/practice/session";
 import VideoPracticeSessionPage from "./pages/practice/video-session";
 import SettingsPage from "./pages/settings";
+import NotificationsPage from "./pages/notifications";
+import PortalPage from "./pages/portal";
 import NotFound from "./pages/NotFound";
 
 export const routers = [
@@ -48,6 +50,11 @@ export const routers = [
     path: "/signup",
     name: "signup",
     element: <SignupPage />,
+  },
+  {
+    path: "/portal",
+    name: "portal",
+    element: <PortalPage />,
   },
   {
     path: "/app",
@@ -233,6 +240,7 @@ export const routers = [
           </RequireRole>
         ),
       },
+      { path: "notifications", name: "notifications", element: <NotificationsPage /> },
       { path: "practice", name: "practice", element: <PracticePage /> },
       { path: "practice/:sessionId", name: "practice-session", element: <PracticeSessionPage /> },
       { path: "practice/:sessionId/video", name: "practice-video-session", element: <VideoPracticeSessionPage /> },

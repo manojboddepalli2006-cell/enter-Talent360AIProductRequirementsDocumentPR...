@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
 
     const { data: session, error: sessionError } = await supabase
       .from("talent_practice_sessions")
-      .select("id, org_id, role_title, job_description, focus_areas, question_count, status")
+      .select("id, org_id, user_id, role_title, job_description, focus_areas, question_count, status")
       .eq("id", body.sessionId)
       .maybeSingle();
 
@@ -372,6 +372,19 @@ Deno.serve(async (req) => {
     if (completeError) throw new Error(completeError.message);
 
     await recordUsage();
+
+    if (session.user_id) {
+      await supabase.from("talent_notifications").insert({
+        org_id: orgId,
+        user_id: session.user_id,
+        type: "verdict",
+        title: `Your interview verdict is ready`,
+        body: `Your ${session.role_title} practice interview scored ${
+          overall === null ? "—" : overall + " / 5"
+        }. See what you got right and wrong.`,
+        link: "/app/practice",
+      });
+    }
 
     await supabase.from("talent_audit_log").insert({
       org_id: orgId,

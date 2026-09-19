@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,6 +27,16 @@ import { StatusPill } from "@/components/common/status-pill";
 import { UserCell } from "@/components/common/user-cell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { EmptyState, ErrorState, LoadingState } from "@/components/common/states";
 import { PipelineBoard } from "@/pages/recruitment/pipeline-board";
 import { IntakeDialog } from "@/pages/recruitment/intake-dialog";
@@ -58,6 +68,11 @@ export default function RecruitmentPage() {
   const [movingId, setMovingId] = useState<string | null>(null);
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [jobDialogOpen, setJobDialogOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkPostingId, setBulkPostingId] = useState("");
+  const [bulkJobId, setBulkJobId] = useState<string | null>(null);
+  const [bulkStartPending, setBulkStartPending] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ status: string; progress: number; processed: number; total: number; error: string | null } | null>(null);
 
   const applicationsQuery = useQuery({
     queryKey: ["talent360-applications"],
@@ -71,6 +86,63 @@ export default function RecruitmentPage() {
 
   const applications = useMemo(() => applicationsQuery.data ?? [], [applicationsQuery.data]);
   const jobs = jobsQuery.data ?? [];
+
+  const unscoredFor = (postingId: string) =>
+    applications.filter(
+      (application) => application.job?.id === postingId && application.ai_match_score === null,
+    );
+
+  const startBulk = async (postingId: string) => {
+    setBulkStartPending(true);
+    setBulkProgress(null);
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke("talent-ai-bulk-match", {
+        body: { jobPostingId: postingId },
+        headers: { "Content-Type": "application/json" },
+      });
+      if (invokeError) throw new Error(invokeError.message);
+      const result = data as { ok?: boolean; error?: string; jobId?: string };
+      if (result?.error || result?.ok === false) throw new Error(result.error ?? "The bulk run failed.");
+      setBulkJobId(result.jobId ?? null);
+    } catch (caught) {
+      toast.error("Bulk screening could not start", {
+        description: caught instanceof Error ? caught.message : "Please try again.",
+      });
+    } finally {
+      setBulkStartPending(false);
+    }
+  };
+
+  // Poll a running bulk screening job and refresh scores as it completes.
+  useEffect(() => {
+    if (!bulkJobId) return;
+    let cancelled = false;
+    const tick = async () => {
+      const { data } = await supabase
+        .from("talent_ai_jobs")
+        .select("status, progress, processed, total, error")
+        .eq("id", bulkJobId)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setBulkProgress({
+        status: data.status,
+        progress: data.progress ?? 0,
+        processed: data.processed ?? 0,
+        total: data.total ?? 0,
+        error: data.error,
+      });
+      if (data.status === "completed" || data.status === "failed") {
+        await invalidate();
+      }
+    };
+    void tick();
+    const interval = window.setInterval(() => void tick(), 2500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bulkJobId]);
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ["talent360-applications"] });
@@ -245,6 +317,15 @@ export default function RecruitmentPage() {
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              onClick={() => setBulkOpen(true)}
+              disabled={!jobs.length}
+              title={jobs.length ? undefined : "Create a job posting first"}
+            >
+              Bulk screen
+            </Button>
+            <Button
+              size="sm"
               onClick={() => setIntakeOpen(true)}
               disabled={!jobs.length}
               title={jobs.length ? undefined : "Create a job posting first"}
@@ -397,6 +478,87 @@ export default function RecruitmentPage() {
         createdBy={profile?.id ?? null}
         onCreated={() => void invalidate()}
       />
+
+      <Dialog open={bulkOpen} onOpenChange={(open) => { setBulkOpen(open); if (!open) setBulkJobId(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-[17px] font-bold">Bulk screen candidates</DialogTitle>
+            <DialogDescription className="text-[12.5px] font-medium leading-relaxed">
+              The AI scores every unscored application for a posting in one run, with live progress.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!bulkJobId ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="bulkPosting">Job posting</Label>
+                <select
+                  id="bulkPosting"
+                  value={bulkPostingId}
+                  onChange={(event) => setBulkPostingId(event.target.value)}
+                  className="h-9 w-full rounded-[10px] border border-input bg-card px-3 text-[13px] font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                >
+                  {jobs.map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {job.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-[11.5px] font-medium text-muted-foreground">
+                {unscoredFor(bulkPostingId).length} unscored application
+                {unscoredFor(bulkPostingId).length === 1 ? "" : "s"} in this posting (up to 4 per run).
+              </p>
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setBulkOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!bulkPostingId || !unscoredFor(bulkPostingId).length || bulkStartPending}
+                  onClick={() => void startBulk(bulkPostingId)}
+                >
+                  {bulkStartPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                  Start bulk screening
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between text-[12px] font-semibold">
+                <span className="capitalize text-foreground">{bulkProgress?.status ?? "starting"}</span>
+                <span className="text-muted-foreground">
+                  {bulkProgress?.processed ?? 0} of {bulkProgress?.total ?? 0}
+                </span>
+              </div>
+              <Progress value={bulkProgress?.progress ?? 0} className="h-2" />
+              {bulkProgress?.status === "completed" ? (
+                <p className="text-[12px] font-semibold text-success">Screening complete. Scores are updated.</p>
+              ) : null}
+              {bulkProgress?.status === "failed" ? (
+                <p className="text-[12px] font-semibold text-destructive">{bulkProgress.error}</p>
+              ) : null}
+              {bulkProgress?.status !== "completed" && bulkProgress?.status !== "failed" ? (
+                <p className="flex items-center gap-2 text-[11.5px] font-medium text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  The AI is scoring each resume against the posting. This can take a minute.
+                </p>
+              ) : null}
+              <DialogFooter>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setBulkOpen(false);
+                    setBulkJobId(null);
+                  }}
+                >
+                  Done
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <p className="text-[11.5px] font-medium leading-relaxed text-muted-foreground">
         Drag a card between columns, or use the move menu. Scoring prompts exclude protected attributes,

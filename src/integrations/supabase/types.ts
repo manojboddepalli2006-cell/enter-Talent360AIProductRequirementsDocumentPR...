@@ -3681,6 +3681,7 @@ export type Database = {
           org_id: string
           parsed_profile: Json | null
           phone: string | null
+          portal_code: string | null
           resume_file_url: string | null
           resume_text: string | null
           source: string
@@ -3695,6 +3696,7 @@ export type Database = {
           org_id: string
           parsed_profile?: Json | null
           phone?: string | null
+          portal_code?: string | null
           resume_file_url?: string | null
           resume_text?: string | null
           source?: string
@@ -3709,6 +3711,7 @@ export type Database = {
           org_id?: string
           parsed_profile?: Json | null
           phone?: string | null
+          portal_code?: string | null
           resume_file_url?: string | null
           resume_text?: string | null
           source?: string
@@ -4288,6 +4291,55 @@ export type Database = {
             foreignKeyName: "talent_learning_recommendations_skill_id_fkey"
             columns: ["skill_id"]
             referencedRelation: "talent_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          org_id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          org_id: string
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          org_id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_notifications_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "talent_orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_notifications_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "talent_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5267,6 +5319,39 @@ export type Database = {
         Relationships: []
       }
       messages_2026_09_21: {
+        Row: {
+          event: string | null
+          extension: string
+          id: string
+          inserted_at: string
+          payload: Json | null
+          private: boolean | null
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          event?: string | null
+          extension: string
+          id?: string
+          inserted_at?: string
+          payload?: Json | null
+          private?: boolean | null
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          event?: string | null
+          extension?: string
+          id?: string
+          inserted_at?: string
+          payload?: Json | null
+          private?: boolean | null
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages_2026_09_22: {
         Row: {
           event: string | null
           extension: string

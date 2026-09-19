@@ -524,6 +524,26 @@ Deno.serve(async (req) => {
       if (refreshError) throw new Error(refreshError.message);
     }
 
+    if (toInsert.length) {
+      const { data: hrProfiles } = await supabase
+        .from("talent_profiles")
+        .select("id")
+        .in("role", ["hr_admin", "org_admin"]);
+
+      if (hrProfiles?.length) {
+        await supabase.from("talent_notifications").insert(
+          hrProfiles.map((profile) => ({
+            org_id: orgId,
+            user_id: profile.id,
+            type: "pending_review",
+            title: `${toInsert.length} new recommendation${toInsert.length === 1 ? "" : "s"} need review`,
+            body: "A workforce signal scan raised new recommendations. Approve, modify or reject them in the AI Action Center.",
+            link: "/app/action-center",
+          })),
+        );
+      }
+    }
+
     await supabase.from("talent_audit_log").insert({
       org_id: orgId,
       action: "risk.assessment_run",
