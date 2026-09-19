@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -7,17 +7,14 @@ import {
   Award,
   Camera,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
   Loader2,
   Mic,
-  MicOff,
   Plus,
   Sparkles,
   Square,
   Target,
   Volume2,
-  Wand2,
   XCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
@@ -59,18 +56,29 @@ function verdictOf(summary: unknown): Verdict {
   return "partially_qualified";
 }
 
+/**
+ * Guided video interview.
+ *
+ * Flow: the AI reads each question aloud → you record your answer on camera
+ * (transcribed live) → Next question auto-scores the answer → the final question
+ * finishes the interview and produces a Qualified / Not qualified verdict.
+ */
 export default function VideoPracticeSessionPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [answerDraft, setAnswerDraft] = useState("");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [liveInterim, setLiveInterim] = useState("");
   const [transcriptError, setTranscriptError] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
+  // Stable, memoised recorder callbacks so effects never re-run from identity changes.
   const recorder = useMediaRecorder();
+  const { status: cameraStatus, stream, blobUrl, elapsed, requestCamera, beginRecording, stopRecording } = recorder;
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const transcriberRef = useRef<Transcriber | null>(null);
   const interimRef = useRef("");
@@ -86,20 +94,11 @@ export default function VideoPracticeSessionPage() {
   // Mirror the live camera into the preview element.
   useEffect(() => {
     const video = videoRef.current;
-    if (video && recorder.stream) {
-      video.srcObject = recorder.stream;
+    if (video && stream) {
+      video.srcObject = stream;
       void video.play().catch(() => undefined);
     }
-  }, [recorder.stream]);
-
-  const commitTranscript = useCallback((text: string) => {
-    setDrafts((current) => {
-      const question = data?.questions[activeIndex];
-      if (!question) return current;
-      const existing = current[question.id] ?? question.answer_text ?? "";
-      return { ...current, [question.id]: `${existing}${existing ? " " : ""}${text}`.trim() };
-    });
-  }, [data?.questions, activeIndex]);
+  }, [stream]);
 
   const ensureTranscriber = useCallback(() => {
     if (transcriberRef.current) return;
@@ -109,29 +108,14 @@ export default function VideoPracticeSessionPage() {
         setLiveInterim(text);
       },
       onFinal: (text) => {
-        commitTranscript(text);
+        setAnswerDraft((current) => `${current}${current ? " " : ""}${text}`.trim());
         interimRef.current = "";
         setLiveInterim("");
       },
       onEnd: () => undefined,
       onError: (message) => setTranscriptError(message),
     });
-  }, [commitTranscript]);
-
-  // 3-2-1 countdown then record.
-  useEffect(() => {
-    if (countdown === null) return;
-    if (countdown <= 0) {
-      recorder.beginRecording();
-      transcriberRef.current?.start();
-      setCountdown(null);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setCountdown((value) => (value === null ? null : value - 1));
-    }, 1000);
-    return () => window.clearTimeout(timer);
-  }, [countdown, recorder]);
+  }, []);
 
   const generateMutation = useMutation({
     mutationFn: generatePracticeQuestions,
@@ -145,29 +129,89 @@ export default function VideoPracticeSessionPage() {
     },
   });
 
-  const scoreMutation = useMutation({
-    mutationFn: async () => {
-      const detail = query.data;
-      if (!detail) throw new Error("The session is not loaded.");
-      const answers = detail.questions
-        .map((question) => ({
-          position: question.position,
-          answerText: (drafts[question.id] ?? question.answer_text ?? "").trim(),
-        }))
-        .filter((entry) => entry.answerText.length > 0);
-      if (!answers.length) throw new Error("Record or type at least one answer first.");
-      return scorePracticeAnswer(sessionId, answers);
-    },
-    onSuccess: async () => {
+  // Auto-generate the question set the first time the interview opens.
+  useEffect(() => {
+    if (data && data.session.status === "in_progress" && data.questions.length === 0 && !generateMutation.isPending) {
+      generateMutation.mutate(sessionId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.session.id, data?.questions.length, sessionId]);
+
+  // Load the active question's saved answer into the editor.
+  const activeQuestion = data?.questions[activeIndex] ?? null;
+  useEffect(() => {
+    setAnswerDraft(activeQuestion?.answer_text ?? "");
+    setLiveInterim("");
+    interimRef.current = "";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeQuestion?.id]);
+
+  const commitInterim = useCallback(() => {
+    if (interimRef.current.trim()) {
+      setAnswerDraft((current) => `${current}${current ? " " : ""}${interimRef.current}`.trim());
+      interimRef.current = "";
+      setLiveInterim("");
+    }
+  }, []);
+
+  const startRecording = () => {
+    setTranscriptError(null);
+    if (cameraStatus !== "ready") {
+      void requestCamera();
+      return;
+    }
+    ensureTranscriber();
+    setCountdown(3);
+  };
+
+  // 3-2-1 countdown then record. Depends only on the stable `countdown` + stable
+  // callback, so the timer never gets reset by a re-render.
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown <= 0) {
+      beginRecording();
+      transcriberRef.current?.start();
+      setCountdown(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setCountdown((value) => (value === null ? null : value - 1));
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [countdown, beginRecording]);
+
+  const stopAnswer = () => {
+    stopRecording();
+    transcriberRef.current?.stop();
+    commitInterim();
+  };
+
+  const currentAnswer = answerDraft.trim();
+
+  const advance = async () => {
+    if (!activeQuestion || !currentAnswer || analyzing) return;
+
+    setAnalyzing(true);
+    try {
+      // Score this answer, then move on — the interview never stalls.
+      await scorePracticeAnswer(sessionId, [
+        { position: activeQuestion.position, answerText: currentAnswer },
+      ]);
       await queryClient.invalidateQueries({ queryKey: ["talent360-practice-video", sessionId] });
-      toast.success("Answers scored", { description: "Feedback is under each question." });
-    },
-    onError: (error) => {
-      toast.error("Answers not scored", {
+
+      if (activeIndex >= (data?.questions.length ?? 1) - 1) {
+        await finishMutation.mutateAsync();
+      } else {
+        setActiveIndex((index) => index + 1);
+      }
+    } catch (error) {
+      toast.error("Your answer could not be analysed", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
-    },
-  });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const finishMutation = useMutation({
     mutationFn: () => completePracticeSession(sessionId),
@@ -177,24 +221,13 @@ export default function VideoPracticeSessionPage() {
       toast.success("Interview complete", { description: "Here is your verdict." });
     },
     onError: (error) => {
-      toast.error("Session could not be finished", {
+      toast.error("The interview could not be finished", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
     },
   });
 
-  useEffect(() => {
-    if (
-      data &&
-      data.session.status === "in_progress" &&
-      data.questions.length === 0 &&
-      !generateMutation.isPending
-    ) {
-      generateMutation.mutate(sessionId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.session.id, data?.questions.length, sessionId]);
-
+  // Stop the camera and speech engines when leaving the page.
   useEffect(() => {
     return () => {
       stopSpeaking();
@@ -223,31 +256,7 @@ export default function VideoPracticeSessionPage() {
 
   const { session, questions } = data;
   const completed = session.status === "completed";
-  const question = questions[activeIndex];
-  const answered = questions.filter((item) => (drafts[item.id] ?? item.answer_text ?? "").trim()).length;
-  const scored = questions.filter((item) => item.feedbackParsed?.score !== null).length;
-  const canFinish = scored >= 1;
-
-  const goNext = () => setActiveIndex((index) => Math.min(index + 1, questions.length - 1));
-  const goPrev = () => setActiveIndex((index) => Math.max(index - 1, 0));
-
-  const startRecording = () => {
-    setTranscriptError(null);
-    if (recorder.status !== "ready") {
-      void recorder.requestCamera();
-      return;
-    }
-    ensureTranscriber();
-    setCountdown(3);
-  };
-
-  const stopRecording = () => {
-    recorder.stopRecording();
-    transcriberRef.current?.stop();
-    if (interimRef.current.trim()) commitTranscript(interimRef.current);
-    interimRef.current = "";
-    setLiveInterim("");
-  };
+  const question = activeQuestion;
 
   const startHearing = () => {
     if (question) speak(question.question_text);
@@ -268,25 +277,14 @@ export default function VideoPracticeSessionPage() {
       </div>
 
       <PageHeader
-        title={completed ? `${session.role_title} — verdict` : `Video interview · ${session.role_title}`}
-        description={
-          session.job_description
-            ? "The AI asks aloud, records your answers on camera, and decides whether you are qualified."
-            : "The AI asks aloud, records your answers on camera, and decides whether you are qualified."
-        }
-        statusLabel={`${answered} of ${session.question_count} answered · ${scored} scored`}
+        title={completed ? `${session.role_title} — verdict` : `Interviewing for ${session.role_title}`}
+        description="The AI reads each question aloud, records your answers, and decides at the end whether you are qualified."
+        statusLabel={completed ? `${questions.length} questions` : `Question ${activeIndex + 1} of ${questions.length}`}
         actions={
           !completed ? (
-            <>
-              <Button variant="outline" size="sm" onClick={() => scoreMutation.mutate()} disabled={scoreMutation.isPending}>
-                {scoreMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-                Score answers
-              </Button>
-              <Button size="sm" onClick={() => finishMutation.mutate()} disabled={finishMutation.isPending || !canFinish}>
-                {finishMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Award className="h-3.5 w-3.5" />}
-                Finish &amp; get verdict
-              </Button>
-            </>
+            <StatusPill tone={analyzing ? "warning" : "neutral"}>
+              {analyzing ? "Analysing your answer…" : "Answer on camera"}
+            </StatusPill>
           ) : null
         }
       />
@@ -294,16 +292,16 @@ export default function VideoPracticeSessionPage() {
       <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
         <div
           className="h-full rounded-full bg-primary transition-all duration-500"
-          style={{ width: `${questions.length ? (answered / questions.length) * 100 : 0}%` }}
+          style={{ width: `${questions.length ? ((activeIndex + (currentAnswer ? 1 : 0)) / questions.length) * 100 : 0}%` }}
         />
       </div>
 
-      {/* Verdict */}
+      {/* ------------------------------------------------------------------ review */}
       {completed && verdict && verdictMeta ? (
         <section className="talent-tile overflow-hidden p-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-[auto_1fr]">
             <div className="flex flex-col items-center justify-center gap-2 md:border-r md:border-border md:pr-6">
-              <StatusPill tone={verdictMeta.tone} className="text-[13px] px-3.5 py-1.5">
+              <StatusPill tone={verdictMeta.tone} className="px-3.5 py-1.5 text-[13px]">
                 {verdictMeta.label}
               </StatusPill>
               <span className="text-[13px] font-extrabold text-foreground">
@@ -319,9 +317,7 @@ export default function VideoPracticeSessionPage() {
                 <p className="text-[13px] font-medium leading-relaxed text-muted-foreground">{summary.summary}</p>
               ) : null}
               {summary.verdict_reason ? (
-                <p className="text-[12.5px] font-semibold leading-relaxed text-foreground">
-                  {summary.verdict_reason}
-                </p>
+                <p className="text-[12.5px] font-semibold leading-relaxed text-foreground">{summary.verdict_reason}</p>
               ) : null}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -407,65 +403,66 @@ export default function VideoPracticeSessionPage() {
         </section>
       ) : null}
 
-      {/* Active question */}
-      {question && !completed ? (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
+      {/* ------------------------------------------------------------------ live */}
+      {!completed && question ? (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_300px]">
           <div className="flex flex-col gap-4">
-            <article className="talent-tile flex flex-col gap-3 p-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[12px] font-bold text-muted-foreground">
-                  {question.position}
+            {/* AI asks */}
+            <section className="talent-tile flex flex-col gap-3 p-5">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-primary-foreground">
+                  AI
                 </span>
-                <StatusPill tone="primary">{question.category}</StatusPill>
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  Question {activeIndex + 1} of {questions.length}
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-[16px] font-bold leading-snug text-foreground">{question.question_text}</h3>
-                <Button variant="soft" size="icon-sm" onClick={startHearing} aria-label="Hear the question" title="Hear the question">
+                <div>
+                  <div className="text-[12px] font-bold text-foreground">The interviewer asks</div>
+                  <div className="text-[10.5px] font-medium text-muted-foreground">
+                    Question {activeIndex + 1} of {questions.length} · {question.category}
+                  </div>
+                </div>
+                <Button variant="soft" size="icon-sm" className="ml-auto" onClick={startHearing} aria-label="Hear the question" title="Hear the question">
                   <Volume2 className="h-4 w-4" />
                 </Button>
               </div>
+
+              <p className="text-[16px] font-semibold leading-snug text-foreground">{question.question_text}</p>
 
               {question.rubric ? (
                 <p className="rounded-xl bg-muted/40 px-3 py-2 text-[11.5px] font-medium leading-relaxed text-muted-foreground">
                   <span className="font-bold text-foreground">What a strong answer covers:</span> {question.rubric}
                 </p>
               ) : null}
-            </article>
+            </section>
 
-            {/* Camera */}
-            <article className="talent-tile flex flex-col gap-3 p-5">
+            {/* Your turn */}
+            <section className="talent-tile flex flex-col gap-3 p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="talent-label">Record your answer</div>
+                <div className="talent-label">Your turn — record your answer</div>
                 <span className="text-[11px] font-semibold text-muted-foreground">
-                  {recorder.status === "recording"
-                    ? `${recorder.elapsed}s`
-                    : recorder.status === "recorded"
-                      ? "Answer recorded"
+                  {cameraStatus === "recording"
+                    ? `${elapsed}s`
+                    : cameraStatus === "recorded"
+                      ? "Recording done"
                       : "Camera off"}
                 </span>
               </div>
 
               <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-                {recorder.stream ? (
+                {stream ? (
                   <video ref={videoRef} playsInline muted className="h-full w-full -scale-x-100 object-cover" />
                 ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-white/70">
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center text-white/70">
                     <Camera className="h-7 w-7" />
                     <span className="text-[12px] font-medium">
-                      {recorder.status === "requesting"
+                      {cameraStatus === "requesting"
                         ? "Requesting camera…"
-                        : recorder.status === "denied" || recorder.status === "unsupported"
+                        : cameraStatus === "denied" || cameraStatus === "unsupported"
                           ? recorder.error
-                          : "Enable your camera to answer on video"}
+                          : "Enable your camera to answer on video — or simply type below."}
                     </span>
                   </div>
                 )}
 
-                {recorder.status === "recording" ? (
+                {cameraStatus === "recording" ? (
                   <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-destructive px-2.5 py-1 text-[10.5px] font-bold text-destructive-foreground">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                     REC
@@ -480,22 +477,20 @@ export default function VideoPracticeSessionPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                {recorder.status === "recording" ? (
-                  <Button size="sm" variant="destructive" onClick={stopRecording}>
+                {cameraStatus === "recording" ? (
+                  <Button size="sm" variant="destructive" onClick={stopAnswer}>
                     <Square className="h-3.5 w-3.5" />
                     Stop recording
                   </Button>
-                ) : recorder.status === "recorded" ? (
-                  <>
-                    <Button size="sm" onClick={startRecording}>
-                      <Camera className="h-3.5 w-3.5" />
-                      Record again
-                    </Button>
-                  </>
-                ) : (
-                  <Button size="sm" onClick={startRecording} disabled={recorder.status === "requesting"}>
+                ) : cameraStatus === "recorded" ? (
+                  <Button size="sm" onClick={startRecording}>
                     <Mic className="h-3.5 w-3.5" />
-                    {recorder.status === "ready" ? "Start recording" : "Enable camera"}
+                    Record again
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={startRecording} disabled={cameraStatus === "requesting"}>
+                    <Mic className="h-3.5 w-3.5" />
+                    {cameraStatus === "ready" ? "Start recording" : "Enable camera"}
                   </Button>
                 )}
                 <Button size="sm" variant="soft" onClick={startHearing}>
@@ -510,25 +505,22 @@ export default function VideoPracticeSessionPage() {
                 </p>
               ) : null}
 
-              {recorder.blobUrl && recorder.status === "recorded" ? (
-                <video src={recorder.blobUrl} controls playsInline className="w-full rounded-xl border border-border" />
+              {blobUrl && cameraStatus === "recorded" ? (
+                <video src={blobUrl} controls playsInline className="w-full rounded-xl border border-border" />
               ) : null}
-            </article>
+            </section>
 
             {/* Transcript */}
-            <article className="talent-tile flex flex-col gap-2 p-5">
+            <section className="talent-tile flex flex-col gap-2 p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="talent-label">Your answer</div>
-                <div className="flex items-center gap-2">
-                  {RECOGNITION_SUPPORTED ? (
-                    <StatusPill tone={recorder.status === "recording" ? "danger" : "neutral"}>
-                      {recorder.status === "recording" ? "Listening…" : "Voice capture"}
-                    </StatusPill>
-                  ) : (
-                    <StatusPill tone="warning">Type manually</StatusPill>
-                  )}
-                  {liveInterim ? <MicOff className="h-3.5 w-3.5 text-muted-foreground" /> : null}
-                </div>
+                {RECOGNITION_SUPPORTED ? (
+                  <StatusPill tone={cameraStatus === "recording" ? "danger" : "neutral"}>
+                    {cameraStatus === "recording" ? "Listening…" : "Voice capture"}
+                  </StatusPill>
+                ) : (
+                  <StatusPill tone="warning">Type manually</StatusPill>
+                )}
               </div>
 
               {liveInterim ? (
@@ -538,14 +530,12 @@ export default function VideoPracticeSessionPage() {
               ) : null}
 
               <Textarea
-                value={drafts[question.id] ?? question.answer_text ?? ""}
-                onChange={(event) =>
-                  setDrafts((current) => ({ ...current, [question.id]: event.target.value }))
-                }
+                value={answerDraft}
+                onChange={(event) => setAnswerDraft(event.target.value)}
                 placeholder={
                   RECOGNITION_SUPPORTED
-                    ? "Your spoken words appear here as you talk. You can also type or edit."
-                    : "Voice capture is not supported in this browser — type your answer."
+                    ? "Your spoken words appear here as you talk. You can also edit."
+                    : "Voice capture is not supported here — type your answer."
                 }
                 className="min-h-[100px]"
               />
@@ -555,33 +545,43 @@ export default function VideoPracticeSessionPage() {
               ) : null}
 
               <div className="flex flex-wrap items-center gap-2 pt-1">
-                <Button variant="outline" size="sm" onClick={goPrev} disabled={activeIndex === 0}>
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  Previous
-                </Button>
                 <Button
-                  variant="outline"
                   size="sm"
-                  onClick={goNext}
-                  disabled={activeIndex === questions.length - 1}
+                  className="ml-auto"
+                  onClick={() => void advance()}
+                  disabled={!currentAnswer || analyzing}
                 >
-                  Next question
-                  <ChevronRight className="h-3.5 w-3.5" />
+                  {analyzing ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Analysing answer…
+                    </>
+                  ) : activeIndex >= questions.length - 1 ? (
+                    <>
+                      <Award className="h-3.5 w-3.5" />
+                      Finish interview
+                    </>
+                  ) : (
+                    <>
+                      Next question
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
                 </Button>
-                <span className="ml-auto text-[11px] font-medium text-muted-foreground">
-                  {scored} of {questions.length} scored
-                </span>
               </div>
-            </article>
+              <p className="text-[10.5px] font-medium text-muted-foreground">
+                Your answer is scored automatically when you continue. The verdict comes at the end.
+              </p>
+            </section>
           </div>
 
-          {/* Rail */}
+          {/* Progress rail */}
           <aside className="flex flex-col gap-4">
             <div className="talent-tile flex flex-col gap-2 p-4 xl:sticky xl:top-20">
               <div className="talent-label">Interview progress</div>
               <ul className="mt-1 flex flex-col gap-1.5">
                 {questions.map((item, index) => {
-                  const hasAnswer = (drafts[item.id] ?? item.answer_text ?? "").trim().length > 0;
+                  const hasAnswer = (item.answer_text ?? "").trim().length > 0;
                   const isScored = item.feedbackParsed?.score !== null;
                   const active = index === activeIndex;
                   return (
@@ -622,8 +622,7 @@ export default function VideoPracticeSessionPage() {
 
               <div className="mt-2 border-t border-border pt-3">
                 <p className="text-[11px] font-medium leading-relaxed text-muted-foreground">
-                  The AI reads each question aloud and scores your spoken answer. Finish to get a
-                  qualified / not-qualified verdict with exactly what you got right and wrong.
+                  Answer every question to get your verdict and a breakdown of what you got right and wrong.
                 </p>
               </div>
             </div>
@@ -631,12 +630,21 @@ export default function VideoPracticeSessionPage() {
         </div>
       ) : null}
 
+      {!completed && !questions.length ? (
+        <div className="talent-tile flex items-center justify-center gap-3 p-10">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <span className="text-[13px] font-semibold text-muted-foreground">
+            The interviewer is writing your questions…
+          </span>
+        </div>
+      ) : null}
+
+      {/* Per-answer review on completed sessions */}
       {completed && verdict ? (
         <section className="flex flex-col gap-3">
           <div className="talent-label">Review your answers</div>
           {questions.map((item) => {
             const feedback = item.feedbackParsed;
-            const answer = item.answer_text ?? "";
             return (
               <article key={item.id} className="talent-tile flex flex-col gap-3 p-5">
                 <div className="flex flex-wrap items-center gap-2">
@@ -652,7 +660,7 @@ export default function VideoPracticeSessionPage() {
                 <div className="rounded-xl bg-muted/40 px-3 py-2">
                   <span className="talent-label">Your spoken answer</span>
                   <p className="mt-1 whitespace-pre-wrap text-[12.5px] font-medium leading-relaxed text-foreground">
-                    {answer || "No answer was recorded for this question."}
+                    {item.answer_text || "No answer was recorded for this question."}
                   </p>
                 </div>
                 {feedback ? (
@@ -692,9 +700,7 @@ export default function VideoPracticeSessionPage() {
                       </div>
                     ) : null}
                   </div>
-                ) : (
-                  <p className="text-[11.5px] font-medium text-muted-foreground">No feedback recorded.</p>
-                )}
+                ) : null}
               </article>
             );
           })}
