@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [demoRole, setDemoRole] = useState<RoleKey | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   if (loading) return <FullScreenLoader label="Checking your session" />;
   if (isAuthenticated) return <Navigate to="/app" replace />;
@@ -121,6 +122,29 @@ export default function LoginPage() {
           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
           Sign in
         </Button>
+
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setNotice("Password reset emails are not sent from this workspace yet. Ask an Org Admin to reset your password, or open a demo role below to explore.")}
+            className="text-[11.5px] font-semibold text-primary hover:underline"
+          >
+            Forgot password?
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotice("Single sign-on is recorded as a configuration entry but no identity provider is connected in this workspace yet.")}
+            className="text-[11.5px] font-semibold text-muted-foreground hover:text-foreground"
+          >
+            SSO Login
+          </button>
+        </div>
+
+        {notice ? (
+          <p className="rounded-xl border border-border bg-card/60 px-3 py-2 text-[11.5px] font-medium leading-relaxed text-muted-foreground">
+            {notice}
+          </p>
+        ) : null}
       </form>
 
       <div className="my-6 flex items-center gap-3">

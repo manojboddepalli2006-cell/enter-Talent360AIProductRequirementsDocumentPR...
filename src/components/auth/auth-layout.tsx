@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { BadgeCheck, BrainCircuit, ShieldCheck, Sparkles } from "lucide-react";
+import { TalentLogo } from "@/components/brand/talent-logo";
+import { OrbitalBackground } from "@/components/brand/orbital-background";
 
 interface AuthLayoutProps {
   title: string;
@@ -8,110 +9,70 @@ interface AuthLayoutProps {
   footer?: ReactNode;
 }
 
-const PILLARS = [
-  {
-    icon: BrainCircuit,
-    title: "Understand, analyse, reason",
-    body: "Multi-source workforce signals are read together, not one dashboard at a time.",
-  },
-  {
-    icon: Sparkles,
-    title: "Explain, never just score",
-    body: "Every recommendation carries the signals behind it, their direction and their weight.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "A human decides",
-    body: "No recommendation becomes a workflow task until someone approves it.",
-  },
-];
+const PILLARS = ["Recruit.", "Develop.", "Understand.", "Act."];
 
 /**
- * Apple-style split auth surface.
- * Auto-layout notes: the two panels are percentage-width flex items (46% / 54%)
- * on regular widths and stack to a single intrinsic-height column on compact
- * widths — no pixel-perfect media queries, just flex wrapping.
+ * Premium dark login surface: the brand mark with its orbital network on the
+ * left, the credential card on the right, and the AI engine status beneath.
  */
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
-    <div className="relative flex min-h-full w-full flex-col bg-background lg:flex-row">
-      {/* Brand panel — macOS-style translucent sidebar material */}
-      <div className="relative flex w-full flex-col justify-between gap-10 overflow-hidden border-b border-border bg-sidebar p-8 backdrop-blur-2xl lg:w-[46%] lg:border-b-0 lg:border-r lg:border-sidebar-border lg:p-10">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-60"
-          style={{
-            backgroundImage:
-              "radial-gradient(70% 60% at 20% 0%, hsl(var(--primary) / 0.18), transparent 70%), radial-gradient(60% 55% at 95% 100%, hsl(var(--accent) / 0.12), transparent 70%)",
-          }}
-          aria-hidden
-        />
+    <div className="relative flex min-h-full w-full flex-col overflow-hidden bg-background lg:flex-row">
+      <OrbitalBackground />
 
-        <div className="relative flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary text-[14px] font-bold text-primary-foreground">
-            T3
-          </span>
-          <div>
-            <div className="text-[16px] font-bold text-sidebar-accent-foreground">Talent360 AI</div>
-            <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-sidebar-foreground">
-              Workforce Intelligence
-            </div>
+      {/* Brand panel */}
+      <div className="relative flex w-full flex-col justify-between gap-10 border-b border-border p-8 lg:w-1/2 lg:border-b-0 lg:border-r lg:p-12">
+        <TalentLogo size={44} withWordmark />
+
+        <div>
+          <h2 className="max-w-lg text-[34px] font-extrabold leading-[1.15] tracking-tight text-foreground">
+            Intelligence for Every Stage of the{" "}
+            <span className="talent-ai-text">Employee Journey.</span>
+          </h2>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {PILLARS.map((pillar) => (
+              <span
+                key={pillar}
+                className="rounded-full border border-border bg-card/60 px-3 py-1 text-[12px] font-bold text-muted-foreground"
+              >
+                {pillar}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-10 flex items-center gap-3">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/25 bg-card/60 shadow-glow">
+              <TalentLogo size={38} />
+            </span>
+            <p className="max-w-xs text-[12.5px] font-medium leading-relaxed text-muted-foreground">
+              AI generates insight. A person reviews it. Enter Pro executes the approved workflow. Talent360
+              measures the outcome.
+            </p>
           </div>
         </div>
 
-        <div className="relative">
-          <h2 className="max-w-md text-[30px] font-bold leading-[1.15] tracking-tight text-sidebar-accent-foreground">
-            One intelligence layer across the whole employee lifecycle.
-          </h2>
-          <p className="mt-3 max-w-md text-[13.5px] font-medium leading-relaxed text-sidebar-foreground">
-            Recruit, interview, onboard, develop, monitor and retain — on data you already have, with a
-            human approving every consequential decision.
-          </p>
-
-          <ul className="mt-8 flex flex-col gap-4">
-            {PILLARS.map((pillar) => (
-              <li key={pillar.title} className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-sidebar-elevated text-sidebar-accent-foreground">
-                  <pillar.icon className="h-4 w-4" />
-                </span>
-                <div>
-                  <div className="text-[13px] font-semibold text-sidebar-accent-foreground">
-                    {pillar.title}
-                  </div>
-                  <div className="text-[12px] font-medium leading-relaxed text-sidebar-foreground">
-                    {pillar.body}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="relative flex items-center gap-2 text-[11.5px] font-medium text-sidebar-foreground">
-          <BadgeCheck className="h-4 w-4 text-success" />
-          Every AI output is logged, reviewed and attributable.
+        <div className="flex items-center gap-2 text-[11.5px] font-semibold">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+          </span>
+          <span className="text-muted-foreground">AI Engine — Operational</span>
         </div>
       </div>
 
-      {/* Form panel — material card on a hairline-separated canvas */}
-      <div className="relative flex flex-1 flex-col items-center justify-center px-5 py-10 sm:px-8">
-        <div className="w-full max-w-[440px]">
-          <div className="mb-6 flex items-center gap-2.5 lg:hidden">
-            <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground">
-              T3
-            </span>
-            <span className="text-[15px] font-bold text-foreground">Talent360 AI</span>
-          </div>
-
-          <div className="talent-glass rounded-3xl border border-border p-6 shadow-panel sm:p-8">
-            <h1 className="text-[22px] font-bold leading-tight tracking-tight text-foreground">{title}</h1>
+      {/* Credential card */}
+      <div className="relative flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
+        <div className="w-full max-w-[420px]">
+          <div className="talent-tile p-6 shadow-panel sm:p-8">
+            <h1 className="text-[22px] font-bold tracking-tight text-foreground">{title}</h1>
             <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-muted-foreground">{subtitle}</p>
-
             <div className="mt-6">{children}</div>
-
-            {footer ? (
-              <div className="mt-6 text-center text-[12.5px] font-medium">{footer}</div>
-            ) : null}
+            {footer ? <div className="mt-6 text-center text-[12.5px] font-medium">{footer}</div> : null}
           </div>
+
+          <p className="mt-4 text-center text-[11px] font-medium text-muted-foreground">
+            The future of workforce intelligence — human-centered, AI-powered, explainable, and actionable.
+          </p>
         </div>
       </div>
     </div>

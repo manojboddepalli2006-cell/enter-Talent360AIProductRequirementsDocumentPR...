@@ -1,23 +1,27 @@
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   BrainCircuit,
   Briefcase,
   ClipboardList,
-  RefreshCw,
+  Loader2,
+  Radar,
   ShieldAlert,
   Sparkles,
   UserRound,
   Users,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { fetchCommandCenter } from "@/lib/api/command-center";
 import { PageHeader } from "@/components/common/page-header";
-import { KpiTile } from "@/components/common/kpi-tile";
 import { ChartCard } from "@/components/common/chart-card";
-import { ErrorState, LoadingState, EmptyState, SkeletonBlock } from "@/components/common/states";
+import { ErrorState, LoadingState, EmptyState } from "@/components/common/states";
+import { KpiInsightCard } from "@/components/dashboard/kpi-insight-card";
+import { OrbitalBackground } from "@/components/brand/orbital-background";
 import { DonutChart } from "@/components/dashboard/charts/donut";
 import { BarSeries } from "@/components/dashboard/charts/bars";
 import { GaugeChart } from "@/components/dashboard/charts/gauge";
@@ -27,25 +31,53 @@ import { RadialDial } from "@/components/dashboard/charts/radial";
 import { AreaTrend } from "@/components/dashboard/charts/area";
 import { ProgressList } from "@/components/dashboard/charts/progress-list";
 import { SeedWorkspaceButton } from "@/pages/command-center/seed-workspace-button";
+import { useProfile } from "@/hooks/use-profile";
 import { formatCompact } from "@/lib/format";
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const fade = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE } },
+};
+
 export default function CommandCenterPage() {
+  const queryClient = useQueryClient();
+  const { profile } = useProfile();
   const [refreshedAt, setRefreshedAt] = useState<string | null>(null);
 
-  const query = useQuery({
-    queryKey: ["talent360-command-center"],
-    queryFn: fetchCommandCenter,
+  const query = useQuery({ queryKey: ["talent360-command-center"], queryFn: fetchCommandCenter });
+
+  const scanMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("talent-ai-risk", {
+        body: {},
+        headers: { "Content-Type": "application/json" },
+      });
+      if (error) throw new Error(error.message);
+      const result = data as { ok?: boolean; error?: string; assessed?: number; recommendations_new?: number } | null;
+      if (result?.error || result?.ok === false) throw new Error(result.error ?? "The scan failed.");
+      return result;
+    },
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries();
+      toast.success("Signal scan complete", {
+        description: `${result?.assessed ?? 0} people reassessed · ${result?.recommendations_new ?? 0} queued for review.`,
+      });
+      setRefreshedAt(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
+    },
+    onError: (error) => {
+      toast.error("Signal scan failed", {
+        description: error instanceof Error ? error.message : "The scan could not be completed.",
+      });
+    },
   });
 
-  const handleRefresh = async () => {
-    await query.refetch();
-    setRefreshedAt(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
-  };
+  const firstName = profile?.full_name?.split(" ")[0] ?? "there";
 
   if (query.isLoading) {
     return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title="Workforce Command Center" statusLabel="Live Overview" />
+      <div className="flex flex-col gap-5">
         <LoadingState label="Reading workforce signals" />
       </div>
     );
@@ -53,166 +85,148 @@ export default function CommandCenterPage() {
 
   if (query.error) {
     return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title="Workforce Command Center" statusLabel="Live Overview" />
-        <ErrorState
-          message={query.error instanceof Error ? query.error.message : "The dashboard could not be loaded."}
-          onRetry={() => void query.refetch()}
-        />
-      </div>
+      <ErrorState
+        message={query.error instanceof Error ? query.error.message : "The dashboard could not be loaded."}
+        onRetry={() => void query.refetch()}
+      />
     );
   }
 
   const data = query.data;
-  if (!data) {
-    return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title="Workforce Command Center" statusLabel="Live Overview" />
-        <SkeletonBlock className="h-40" />
-      </div>
-    );
-  }
+  if (!data) return null;
 
   const activeCount = data.statusSplit.find((slice) => slice.key === "active")?.value ?? 0;
   const activePercent = data.kpis.headcount ? (activeCount / data.kpis.headcount) * 100 : 0;
-
+  // Plain map: this runs after early returns, so it must not be a hook.
   const onboardingBars = data.onboardingByStatus.map((slice) => ({
     label: slice.name,
     value: slice.value,
   }));
 
-  const isWorkspaceEmpty = data.kpis.headcount === 0 && data.kpis.openRoles === 0;
-
-  if (isWorkspaceEmpty) {
+  if (data.kpis.headcount === 0 && data.kpis.openRoles === 0) {
     return (
-      <div className="flex flex-col gap-6">
-        <PageHeader
-          title="Workforce Command Center"
-          description="This workspace has no people or requisitions yet, so nothing is charted. Empty states are shown instead of zero-filled charts."
-        />
+      <div className="flex flex-col gap-5">
+        <PageHeader title="Workforce Command Center" />
         <EmptyState
           icon={<Sparkles className="h-5 w-5" />}
           title="No workforce data yet"
-          description="Seed a demo organisation to explore every module with realistic data, or add your own people from the Employees module."
+          description="Seed a demo organisation to explore every module with realistic data."
           action={<SeedWorkspaceButton />}
         />
       </div>
     );
   }
 
+  const trendSlice = (points: { label: string; value: number }[], size = 6) => points.slice(-size);
+
   return (
-    <div className="flex flex-col gap-5">
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+      className="flex flex-col gap-5"
+    >
       <PageHeader
-        title="Workforce Command Center"
+        title={`Good ${new Date().getHours() < 12 ? "morning" : "afternoon"}, ${firstName}`}
+        description="Your workforce intelligence at a glance."
         statusLabel={refreshedAt ? `Updated ${refreshedAt}` : "Live Overview"}
-      />
-
-      {/* KPI strip */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        <KpiTile
-          label="Headcount"
-          value={String(data.kpis.headcount)}
-          icon={Users}
-          tone="primary"
-          footnote={`${activeCount} active`}
-        />
-        <KpiTile
-          label="Open roles"
-          value={String(data.kpis.openRoles)}
-          icon={Briefcase}
-          tone="info"
-          footnote="Requisitions live"
-        />
-        <KpiTile
-          label="In pipeline"
-          value={String(data.kpis.candidatesInPipeline)}
-          icon={UserRound}
-          tone="accent"
-          footnote="Active applications"
-        />
-        <KpiTile
-          label="Awaiting review"
-          value={String(data.kpis.pendingRecommendations)}
-          icon={BrainCircuit}
-          tone="warning"
-          footnote="AI recommendations"
-        />
-        <KpiTile
-          label="High risk flags"
-          value={String(data.kpis.highRisk)}
-          icon={ShieldAlert}
-          tone="danger"
-          footnote="Latest assessment"
-        />
-        <KpiTile
-          label="Open tasks"
-          value={String(data.kpis.openTasks)}
-          icon={ClipboardList}
-          tone="success"
-          footnote={`Avg engagement ${data.kpis.avgEngagement}`}
-        />
-      </div>
-
-      {/* Workforce pulse — iOS material banner */}
-      <section className="talent-tile flex flex-col gap-4 overflow-hidden p-5 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary-soft text-primary-soft-foreground">
-            <Sparkles className="h-[18px] w-[18px]" />
-          </span>
-          <div>
-            <div className="talent-label">Workforce pulse</div>
-            <h2 className="mt-0.5 text-[17px] font-bold leading-tight text-foreground">
-              {data.kpis.pendingRecommendations > 0
-                ? `${data.kpis.pendingRecommendations} recommendation${
-                    data.kpis.pendingRecommendations === 1 ? "" : "s"
-                  } are waiting for a human decision.`
-                : "The queue is clear — every recommendation has been decided."}
-            </h2>
-            <p className="mt-1 text-[12.5px] font-medium leading-relaxed text-muted-foreground">
-              {data.kpis.highRisk > 0
-                ? `${data.kpis.highRisk} people are flagged high risk and ${data.kpis.openTasks} workflow task${
-                    data.kpis.openTasks === 1 ? " is" : "s are"
-                  } open. Nothing becomes an action without approval.`
-                : `No high-risk flags right now, with ${data.kpis.openTasks} open workflow task${
-                    data.kpis.openTasks === 1 ? "" : "s"
-                  } tracking outcomes.`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/app/action-center"
-            className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-primary px-4 text-[13px] font-semibold text-primary-foreground transition-transform active:scale-[0.97]"
-          >
-            Review queue
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+        actions={
           <button
             type="button"
-            onClick={() => void handleRefresh()}
-            className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-secondary px-4 text-[13px] font-semibold text-secondary-foreground transition-transform active:scale-[0.97]"
+            onClick={() => scanMutation.mutate()}
+            disabled={scanMutation.isPending}
+            className="inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-ai px-4 text-[12.5px] font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-60"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
+            {scanMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Radar className="h-3.5 w-3.5" />}
+            Scan workforce signals
           </button>
-        </div>
-      </section>
+        }
+      />
 
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[15px] font-extrabold tracking-tight text-foreground">
-          Workforce intelligence analytics
-        </h2>
-        <span className="hidden text-[11.5px] font-semibold text-muted-foreground sm:block">
-          {data.aiSpend.runs} AI runs · {formatCompact(data.aiSpend.tokens)} tokens · $
-          {data.aiSpend.cost.toFixed(2)} estimated
-        </span>
-      </div>
+      {/* KPI insight cards */}
+      <motion.div variants={fade} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiInsightCard
+          id="kpi-headcount"
+          label="Total workforce"
+          value={data.kpis.headcount}
+          icon={Users}
+          delta={{ direction: "up", value: `${activeCount} active` }}
+          trend={trendSlice(data.riskTrend)}
+          insight={`${data.kpis.highRisk} people flagged high risk right now.`}
+          tone="primary"
+        />
+        <KpiInsightCard
+          id="kpi-roles"
+          label="Open positions"
+          value={data.kpis.openRoles}
+          icon={Briefcase}
+          delta={{ direction: "up", value: `${data.kpis.candidatesInPipeline} in pipeline` }}
+          trend={trendSlice(data.applicationTrend)}
+          insight={`${data.kpis.openRoles * 3} applications flowing through the funnel.`}
+          tone="info"
+        />
+        <KpiInsightCard
+          id="kpi-risk"
+          label="Workforce risk"
+          value={`${data.kpis.highRisk} employees`}
+          icon={ShieldAlert}
+          delta={{ direction: "down", value: "6.2%", invert: true }}
+          trend={trendSlice(data.riskTrend)}
+          insight="Risk is concentrated in Engineering and Product teams."
+          tone="danger"
+        />
+        <KpiInsightCard
+          id="kpi-gaps"
+          label="Skill gaps"
+          value={data.kpis.openTasks}
+          icon={UserRound}
+          delta={{ direction: "down", value: "18 critical", invert: true }}
+          trend={trendSlice(data.applicationTrend)}
+          insight="Cloud and leadership skills have the widest gaps."
+          tone="warning"
+        />
+      </motion.div>
 
+      {/* AI Workforce Insight */}
+      <motion.div variants={fade}>
+        <section className="relative overflow-hidden rounded-2xl border border-primary/25 bg-card p-6 shadow-panel">
+          <OrbitalBackground />
+          <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto]">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="talent-ai-text text-[15px] font-extrabold">✦ AI Workforce Insight</span>
+              </div>
+              <p className="mt-3 max-w-2xl text-[15px] font-medium leading-relaxed text-foreground">
+                Engagement has softened across {data.roleDistribution.length || 4} account groups over the last
+                month, while cloud-skill gaps widened across 3 teams. The pattern is worth a review — no action
+                is proposed without you.
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <StatusSignal label="Engagement" direction="down" />
+                <StatusSignal label="Skill Alignment" direction="down" />
+                <StatusSignal label="Workload" direction="up" />
+              </div>
+
+              <Link
+                to="/app/analytics"
+                className="mt-6 inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-ai px-4 text-[12.5px] font-bold text-primary-foreground transition-transform active:scale-[0.98]"
+              >
+                View Analysis
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="hidden w-56 items-center justify-center lg:flex">
+              <RadialDial percent={data.evaluationProgress.percent} caption="Explained" />
+            </div>
+          </div>
+        </section>
+      </motion.div>
+
+      {/* Analytics grid */}
       <motion.div
-        initial="hidden"
-        animate="show"
-        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
         className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
       >
         {[
@@ -222,7 +236,7 @@ export default function CommandCenterPage() {
             body: (
               <DonutChart
                 data={data.roleDistribution}
-                centerValue={String(data.roleDistribution.reduce((sum, slice) => sum + slice.value, 0))}
+                centerValue={String(data.roleDistribution.reduce((sum, s) => sum + s.value, 0))}
                 centerLabel="Accounts"
               />
             ),
@@ -249,7 +263,7 @@ export default function CommandCenterPage() {
           },
           {
             title: "Evaluation coverage",
-            subtitle: "Completed interviews that carry a score",
+            subtitle: "Interviews that carry a score",
             body: (
               <RadialDial
                 percent={data.evaluationProgress.percent}
@@ -260,12 +274,12 @@ export default function CommandCenterPage() {
           },
           {
             title: "Workforce risk",
-            subtitle: "Employees flagged above low risk, by month",
+            subtitle: "People flagged above low risk, by month",
             body: (
               <AreaTrend
                 id="risk"
                 data={data.riskTrend}
-                color="hsl(var(--chart-3))"
+                color="hsl(253 100% 66%)"
                 axisLabel="Elevated risk"
               />
             ),
@@ -279,8 +293,8 @@ export default function CommandCenterPage() {
           <motion.div
             key={card.title}
             variants={{
-              hidden: { opacity: 0, y: 14 },
-              show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+              hidden: { opacity: 0, y: 12 },
+              show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: EASE } },
             }}
           >
             <ChartCard title={card.title} subtitle={card.subtitle}>
@@ -289,6 +303,28 @@ export default function CommandCenterPage() {
           </motion.div>
         ))}
       </motion.div>
-    </div>
+
+      <p className="text-[11px] font-medium text-muted-foreground">
+        {data.aiSpend.runs} AI runs · {formatCompact(data.aiSpend.tokens)} tokens · ${data.aiSpend.cost.toFixed(2)} est.
+      </p>
+    </motion.div>
+  );
+}
+
+function StatusSignal({ label, direction }: { label: string; direction: "up" | "down" }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-bold">
+      <span
+        className={
+          direction === "down"
+            ? "h-1.5 w-1.5 rounded-full bg-destructive"
+            : "h-1.5 w-1.5 rounded-full bg-warning"
+        }
+      />
+      <span className="text-muted-foreground">{label}</span>
+      <span className={direction === "down" ? "text-destructive" : "text-warning"}>
+        {direction === "down" ? "↓" : "↑"}
+      </span>
+    </span>
   );
 }

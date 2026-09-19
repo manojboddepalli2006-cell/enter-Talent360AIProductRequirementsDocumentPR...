@@ -32,6 +32,7 @@ import PracticeSessionPage from "./pages/practice/session";
 import VideoPracticeSessionPage from "./pages/practice/video-session";
 import SettingsPage from "./pages/settings";
 import NotificationsPage from "./pages/notifications";
+import AnalyticsPage from "./pages/analytics";
 import PortalPage from "./pages/portal";
 import NotFound from "./pages/NotFound";
 
@@ -241,6 +242,7 @@ export const routers = [
         ),
       },
       { path: "notifications", name: "notifications", element: <NotificationsPage /> },
+      { path: "analytics", name: "analytics", element: <AnalyticsPage /> },
       { path: "practice", name: "practice", element: <PracticePage /> },
       { path: "practice/:sessionId", name: "practice-session", element: <PracticeSessionPage /> },
       { path: "practice/:sessionId/video", name: "practice-video-session", element: <VideoPracticeSessionPage /> },

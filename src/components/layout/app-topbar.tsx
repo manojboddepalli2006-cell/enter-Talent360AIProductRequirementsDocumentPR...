@@ -1,10 +1,10 @@
-import { Menu, Moon, Search, Sun } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { CircleHelp, Menu, Moon, Search, Sun } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { NAV_ITEMS } from "@/components/layout/nav-config";
-import { useTheme } from "@/hooks/use-theme";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { useTheme } from "@/hooks/use-theme";
+import { useProfile } from "@/hooks/use-profile";
+import { initialsOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface AppTopbarProps {
@@ -15,49 +15,74 @@ interface AppTopbarProps {
 export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
   const { pathname } = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { profile, org } = useProfile();
 
-  // Longest matching nav route wins, so nested detail routes keep their parent label.
   const current =
     NAV_ITEMS.filter((item) => pathname === item.to || pathname.startsWith(`${item.to}/`)).sort(
       (a, b) => b.to.length - a.to.length,
     )[0] ?? null;
 
   return (
-    <header className="talent-glass safe-top sticky top-0 z-20 flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 md:px-6">
-      <div className="flex h-14 min-w-0 items-center gap-3">
-        <button
-          type="button"
-          onClick={onOpenMobileNav}
-          aria-label="Open navigation"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground md:hidden"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl md:px-6">
+      <button
+        type="button"
+        onClick={onOpenMobileNav}
+        aria-label="Open navigation"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground md:hidden"
+      >
+        <Menu className="h-4 w-4" />
+      </button>
 
-        <div className="min-w-0">
-          <div className="truncate text-[13px] font-bold text-foreground">
-            {current?.label ?? "Talent360 AI"}
-          </div>
-          <div className="hidden truncate text-[11px] font-medium text-muted-foreground sm:block">
-            Human-in-the-loop workforce intelligence
-          </div>
-        </div>
+      {/* Breadcrumb */}
+      <div className="hidden min-w-0 items-center gap-1.5 text-[12.5px] font-medium text-muted-foreground md:flex">
+        <span>Talent360 AI</span>
+        <span className="text-border">/</span>
+        <span className="truncate font-bold text-foreground">{current?.label ?? "Workspace"}</span>
       </div>
 
-      <div className="flex h-14 items-center gap-2">
+      {/* Center search */}
+      <div className="mx-auto hidden w-full max-w-md lg:block">
         <button
           type="button"
           onClick={onOpenPalette}
-          className={cn(
-            "hidden h-9 items-center gap-2 rounded-xl border border-border bg-card px-3 text-[12px] font-semibold text-muted-foreground transition-colors hover:text-foreground sm:flex",
-          )}
+          className="flex h-9 w-full items-center gap-2.5 rounded-xl border border-border bg-card/60 px-3 text-[12.5px] font-medium text-muted-foreground transition-colors hover:border-primary/40"
         >
           <Search className="h-3.5 w-3.5" />
-          Search
-          <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">⌘K</kbd>
+          <span className="flex-1 text-left">Search employees, candidates, skills, actions…</span>
+          <kbd className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold">⌘K</kbd>
+        </button>
+      </div>
+
+      {/* Right side */}
+      <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-1.5 xl:flex">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+          </span>
+          <span className="text-[11.5px] font-bold text-foreground">AI Engine</span>
+          <span className="text-[11px] font-medium text-success-soft-foreground">Operational</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          aria-label="Search"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+        >
+          <Search className="h-4 w-4" />
         </button>
 
         <NotificationBell />
+
+        <button
+          type="button"
+          aria-label="Help"
+          title="Help"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <CircleHelp className="h-4 w-4" />
+        </button>
 
         <button
           type="button"
@@ -67,6 +92,27 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
         >
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
+
+        <button
+          type="button"
+          title={org?.name ?? "Workspace"}
+          className="flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-2 transition-colors hover:border-primary/40"
+        >
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-ai text-[9px] font-extrabold text-primary-foreground">
+            {(org?.name ?? "T3").slice(0, 2).toUpperCase()}
+          </span>
+          <span className="hidden max-w-[90px] truncate text-[12px] font-bold text-foreground md:block">
+            {org?.name ?? "Workspace"}
+          </span>
+        </button>
+
+        <span
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-full bg-gradient-ai text-[11px] font-extrabold text-primary-foreground",
+          )}
+        >
+          {initialsOf(profile?.full_name)}
+        </span>
       </div>
     </header>
   );

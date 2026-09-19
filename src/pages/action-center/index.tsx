@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { listRecommendations, type RecommendationWithContext, type ReviewResult } from "@/lib/api/actions";
 import { PageHeader } from "@/components/common/page-header";
 import { KpiTile } from "@/components/common/kpi-tile";
+import { WorkflowVisualization } from "@/components/common/workflow-visualization";
 import { FilterTabs } from "@/components/common/filter-tabs";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/common/states";
@@ -173,6 +174,31 @@ export default function ActionCenterPage() {
           </>
         }
       />
+
+      {/* The responsible-AI pipeline */}
+      <section className="talent-tile p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="talent-label">Enter Pro workflow pipeline</span>
+          <span className="text-[11px] font-medium text-muted-foreground">
+            AI generates · a person approves · Enter Pro executes · outcome is measured
+          </span>
+        </div>
+        <div className="mt-3 overflow-x-auto">
+          <div className="min-w-[640px]">
+            <WorkflowVisualization
+              steps={[
+                { key: "ai", label: "AI Insight", state: "done" },
+                { key: "review", label: "Human Review", state: "active" },
+                { key: "approve", label: "Approved", state: counts.approved + counts.modified ? "active" : "pending" },
+                { key: "flow", label: "Enter Pro Workflow", state: counts.withWorkflow ? "done" : "pending" },
+                { key: "task", label: "Task Created", state: counts.withWorkflow ? "done" : "pending" },
+                { key: "follow", label: "Follow-up", state: "pending" },
+                { key: "outcome", label: "Outcome", state: "pending" },
+              ]}
+            />
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <KpiTile label="Pending review" value={String(counts.pending)} icon={BrainCircuit} tone="warning" />

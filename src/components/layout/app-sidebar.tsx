@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, LogOut, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun, UserCircle } from "lucide-react";
+import { ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Search, UserCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS, canSeeItem } from "@/components/layout/nav-config";
+import { TalentLogo } from "@/components/brand/talent-logo";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "@/hooks/use-session";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { useTheme } from "@/hooks/use-theme";
 import { ROLE_LABELS } from "@/lib/domain";
 import { initialsOf } from "@/lib/format";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -32,7 +32,6 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
   const { profile, org } = useProfile();
   const { user } = useSession();
   const { signOut } = useAuthContext();
-  const { theme, toggleTheme } = useTheme();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     NAV_GROUPS.reduce<Record<string, boolean>>((acc, group) => {
@@ -41,59 +40,42 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
     }, {}),
   );
 
-  // A group that contains the active route should never stay collapsed.
   useEffect(() => {
     setOpenGroups((current) => {
       const next = { ...current };
       NAV_GROUPS.forEach((group) => {
-        const visible = group.items.filter((item) => canSeeItem(item, can));
-        if (!visible.length) return;
-        if (window.location.pathname.startsWith("/app") && group.defaultOpen) next[group.key] = true;
+        if (group.defaultOpen) next[group.key] = true;
       });
       return next;
     });
-  }, [can]);
+  }, []);
 
   const displayName = profile?.full_name ?? user?.email ?? "Signed in";
   const displayEmail = profile?.email ?? user?.email ?? "";
 
   return (
-    /* macOS-style translucent source list: material over the canvas,
-       with a hairline right edge instead of a hard shadow. */
-    <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground backdrop-blur-2xl">
+    <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Brand */}
-      <div className={cn("flex items-center gap-2.5 px-4 py-5", collapsed && "justify-center px-2")}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground">
-          T3
-        </span>
-        {!collapsed ? (
-          <div className="min-w-0">
-            <div className="truncate text-[15px] font-extrabold text-sidebar-accent-foreground">Talent360 AI</div>
-            <div className="truncate text-[10.5px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground">
-              Workforce Intelligence
-            </div>
-          </div>
-        ) : null}
+      <div className={cn("flex items-center px-4 pb-4 pt-5", collapsed && "justify-center px-2")}>
+        <TalentLogo size={34} withWordmark={!collapsed} />
       </div>
 
-      {/* Search / command palette trigger */}
+      {/* Search / palette */}
       <div className={cn("px-3 pb-3", collapsed && "px-2")}>
         <button
           type="button"
           onClick={onOpenPalette}
-          title="Search and jump to a module"
+          title="Search (⌘K)"
           className={cn(
-            "flex w-full items-center gap-2 rounded-[10px] bg-sidebar-elevated px-3 py-2.5 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
+            "flex w-full items-center gap-2 rounded-xl border border-sidebar-border bg-sidebar-elevated px-3 py-2.5 text-[12.5px] font-medium transition-colors hover:border-primary/40",
             collapsed && "justify-center px-2",
           )}
         >
           <Search className="h-4 w-4 shrink-0" />
           {!collapsed ? (
             <>
-              <span className="flex-1 text-left">Search</span>
-              <kbd className="rounded-md bg-sidebar-muted px-1.5 py-0.5 text-[10px] font-bold text-sidebar-foreground">
-                ⌘K
-              </kbd>
+              <span className="flex-1 text-left">Search…</span>
+              <kbd className="rounded-md bg-sidebar-muted px-1.5 py-0.5 text-[10px] font-bold">⌘K</kbd>
             </>
           ) : null}
         </button>
@@ -104,28 +86,23 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
         {NAV_GROUPS.map((group) => {
           const items = group.items.filter((item) => canSeeItem(item, can));
           if (!items.length) return null;
-
           const isOpen = collapsed ? true : (openGroups[group.key] ?? false);
 
           return (
             <Collapsible
               key={group.key}
               open={isOpen}
-              onOpenChange={(open) =>
-                setOpenGroups((current) => ({ ...current, [group.key]: open }))
-              }
+              onOpenChange={(open) => setOpenGroups((current) => ({ ...current, [group.key]: open }))}
               className="mb-1"
             >
               {!collapsed ? (
-                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-[10.5px] font-bold uppercase tracking-[0.1em] text-sidebar-foreground/80 transition-colors hover:text-sidebar-accent-foreground">
+                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-sidebar-foreground/80 transition-colors hover:text-sidebar-accent-foreground">
                   {group.label}
-                  <ChevronDown
-                    className={cn("h-3.5 w-3.5 transition-transform", !isOpen && "-rotate-90")}
-                  />
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !isOpen && "-rotate-90")} />
                 </CollapsibleTrigger>
               ) : null}
 
-              <CollapsibleContent className="talent-sidebar-group">
+              <CollapsibleContent>
                 <div className={cn("flex flex-col gap-0.5", !collapsed && "mt-1")}>
                   {items.map((item) => (
                     <NavLink
@@ -135,16 +112,26 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
                       title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
                         cn(
-                          "group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] font-medium transition-colors duration-150",
+                          "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-all duration-150",
                           collapsed && "justify-center px-2",
                           isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                            : "text-sidebar-foreground hover:bg-sidebar-elevated",
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-glow"
+                            : "hover:bg-sidebar-elevated hover:text-sidebar-accent-foreground",
                         )
                       }
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed ? <span className="truncate">{item.label}</span> : null}
+                      {({ isActive }) => (
+                        <>
+                          <span
+                            className={cn(
+                              "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-gradient-ai transition-opacity",
+                              isActive ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          {!collapsed ? <span className="truncate">{item.label}</span> : null}
+                        </>
+                      )}
                     </NavLink>
                   ))}
                 </div>
@@ -154,28 +141,56 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
         })}
       </nav>
 
-      {/* Footer controls */}
-      <div className={cn("flex items-center gap-2 px-3 pb-3", collapsed && "flex-col px-2")}>
+      {/* Footer: org selector, AI status, collapse */}
+      <div className="flex flex-col gap-2 border-t border-sidebar-border p-3">
         <button
           type="button"
-          onClick={toggleTheme}
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="flex h-9 flex-1 items-center justify-center gap-2 rounded-xl bg-sidebar-elevated text-[12px] font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-xl bg-sidebar-elevated px-3 py-2 text-left transition-colors hover:bg-sidebar-muted",
+            collapsed && "justify-center",
+          )}
         >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          {!collapsed ? <span>{theme === "dark" ? "Light" : "Dark"}</span> : null}
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-ai text-[10px] font-extrabold text-primary-foreground">
+            {(org?.name ?? "T3").slice(0, 2).toUpperCase()}
+          </span>
+          {!collapsed ? (
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12px] font-bold text-sidebar-accent-foreground">
+                {org?.name ?? "Select workspace"}
+              </span>
+              <span className="block truncate text-[10px] font-medium text-sidebar-foreground">
+                {ROLE_LABELS[profile?.role ?? ""] ?? "Member"}
+              </span>
+            </span>
+          ) : null}
         </button>
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-elevated text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        >
-          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </button>
+
+        <div className={cn("flex items-center gap-2 rounded-xl border border-border bg-card/40 px-3 py-2", collapsed && "justify-center")}>
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+          </span>
+          {!collapsed ? (
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11.5px] font-bold text-sidebar-accent-foreground">AI Engine</span>
+              <span className="block text-[10px] font-medium text-sidebar-foreground">Operational</span>
+            </span>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-elevated text-sidebar-foreground transition-colors hover:bg-sidebar-muted"
+          >
+            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
 
-      {/* Identity */}
+      {/* User profile */}
       <div className="border-t border-sidebar-border p-3">
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -184,25 +199,22 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
               collapsed && "justify-center",
             )}
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning text-[12px] font-extrabold text-warning-foreground">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-ai text-[12px] font-extrabold text-primary-foreground">
               {initialsOf(displayName)}
             </span>
             {!collapsed ? (
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[12.5px] font-bold text-sidebar-accent-foreground">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[12.5px] font-bold text-sidebar-accent-foreground">
                   {displayName}
-                </div>
-                <div className="truncate text-[11px] font-medium text-sidebar-foreground">{displayEmail}</div>
-              </div>
+                </span>
+                <span className="block truncate text-[10.5px] font-medium text-sidebar-foreground">{displayEmail}</span>
+              </span>
             ) : null}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuLabel className="flex flex-col gap-0.5">
               <span className="text-[13px] font-bold">{displayName}</span>
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {ROLE_LABELS[profile?.role ?? ""] ?? "No workspace"}
-                {org?.name ? ` · ${org.name}` : ""}
-              </span>
+              <span className="text-[11px] font-medium text-muted-foreground">{displayEmail}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

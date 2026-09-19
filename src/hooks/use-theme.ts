@@ -7,7 +7,7 @@ const STORAGE_KEY = "talent360-theme";
 function readInitialTheme(): ThemeMode {
   if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "dark" ? "dark" : "light";
+  return stored === "light" ? "light" : "dark";
 }
 
 /** Light/dark toggle driven by a class on <html> plus localStorage persistence. */

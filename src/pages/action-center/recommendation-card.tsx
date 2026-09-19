@@ -2,6 +2,7 @@ import { Check, Clock, GitBranch, PencilLine, X } from "lucide-react";
 import { StatusPill } from "@/components/common/status-pill";
 import { ReasoningPanel } from "@/components/common/reasoning-panel";
 import { Button } from "@/components/ui/button";
+import { WorkflowVisualization } from "@/components/common/workflow-visualization";
 import { UserCell } from "@/components/common/user-cell";
 import { MODULE_LABELS, RECOMMENDATION_STATUS_LABELS, STATUS_TONE } from "@/lib/domain";
 import { formatRelative } from "@/lib/format";
@@ -106,6 +107,21 @@ export function RecommendationCard({ recommendation, reviewerName, onDecide }: R
           ) : (
             <StatusPill tone="neutral">No workflow</StatusPill>
           )}
+          {recommendation.workflowId ? (
+            <div className="w-full pt-1">
+              <WorkflowVisualization
+                steps={[
+                  { key: "ai", label: "AI Insight", state: "done" },
+                  { key: "review", label: "Human Review", state: "done" },
+                  { key: "approve", label: "Approved", state: "done" },
+                  { key: "flow", label: "Workflow", state: "done" },
+                  { key: "task", label: "Task", state: "active" },
+                  { key: "follow", label: "Follow-up", state: "pending" },
+                  { key: "outcome", label: "Outcome", state: "pending" },
+                ]}
+              />
+            </div>
+          ) : null}
           {recommendation.rejection_reason ? (
             <span className="w-full text-[11.5px] font-medium italic leading-snug text-muted-foreground">
               Reason: {recommendation.rejection_reason}
