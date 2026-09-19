@@ -10,12 +10,12 @@ export type AiEngineState =
   | "offline";
 
 const STATE_META: Record<AiEngineState, { label: string; color: string; spin: number }> = {
-  operational: { label: "Operational", color: "hsl(145 63% 49%)", spin: 60 },
-  processing: { label: "Processing", color: "hsl(215 100% 56%)", spin: 18 },
-  recommendation: { label: "Recommendation ready", color: "hsl(189 100% 55%)", spin: 30 },
-  workflow: { label: "Workflow running", color: "hsl(253 100% 66%)", spin: 12 },
-  degraded: { label: "Degraded", color: "hsl(38 92% 55%)", spin: 90 },
-  offline: { label: "AI Engine Offline", color: "hsl(215 20% 55%)", spin: 0 },
+  operational: { label: "Operational", color: "hsl(var(--success))", spin: 60 },
+  processing: { label: "Processing", color: "hsl(var(--primary))", spin: 18 },
+  recommendation: { label: "Recommendation ready", color: "hsl(var(--info))", spin: 30 },
+  workflow: { label: "Workflow running", color: "hsl(var(--accent))", spin: 12 },
+  degraded: { label: "Degraded", color: "hsl(var(--warning))", spin: 90 },
+  offline: { label: "AI Engine Offline", color: "hsl(var(--muted-foreground))", spin: 0 },
 };
 
 /**
@@ -147,7 +147,7 @@ export function LiveAiOrb({
 
         {/* Human/AI core with upward growth arrow */}
         <circle cx="100" cy="100" r="15" fill="url(#live-orb)" opacity="0.9" />
-        <path d="M94 106 L100 90 L106 106 L102.6 106 L100 98.6 L97.4 106 Z" fill="#050B18" />
+        <path d="M94 106 L100 90 L106 106 L102.6 106 L100 98.6 L97.4 106 Z" fill="hsl(var(--background))" />
 
         {/* Data particles drifting upward */}
         {animate

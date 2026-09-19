@@ -100,7 +100,7 @@ export default function EmployeeHomePage() {
                     <div key={skill.skillId} className="flex w-[86px] flex-col items-center gap-1.5">
                       <div className="relative h-[86px] w-[86px]">
                         <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                          <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(222 40% 16%)" strokeWidth="8" />
+                          <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
                           <circle
                             cx="50"
                             cy="50"

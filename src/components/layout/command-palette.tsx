@@ -38,7 +38,7 @@ const EMPTY: SearchResults = { employees: [], candidates: [], skills: [], polici
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate();
   const { can } = usePermissions();
-  const { theme, toggleTheme } = useTheme();
+  const { resolved, toggle } = useTheme();
   const [term, setTerm] = useState("");
   const debounced = useDebouncedValue(term.trim(), 250);
 
@@ -178,13 +178,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         ))}
 
         <CommandGroup heading="Actions">
-          <CommandItem value="toggle theme appearance" onSelect={() => toggleTheme()}>
-            {theme === "dark" ? (
+          <CommandItem value="toggle theme appearance" onSelect={() => toggle()}>
+            {resolved === "dark" ? (
               <Sun className="mr-2 h-4 w-4 text-muted-foreground" />
             ) : (
               <Moon className="mr-2 h-4 w-4 text-muted-foreground" />
             )}
-            Switch to {theme === "dark" ? "light" : "dark"} mode
+            Switch to {resolved === "dark" ? "light" : "dark"} mode
           </CommandItem>
         </CommandGroup>
       </CommandList>

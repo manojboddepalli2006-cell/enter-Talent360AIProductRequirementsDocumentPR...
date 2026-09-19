@@ -66,7 +66,7 @@ export function WorkflowVisualization({
                       "h-px w-full transition-all duration-500",
                       connectorActive ? "bg-gradient-ai opacity-80" : "bg-border",
                     )}
-                    style={connectorActive ? { boxShadow: "0 0 6px hsl(215 100% 54% / 0.6)" } : undefined}
+                    style={connectorActive ? { boxShadow: "0 0 6px hsl(var(--primary) / 0.6)" } : undefined}
                   />
                 </div>
               ) : null}

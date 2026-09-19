@@ -1,10 +1,19 @@
-import { CircleHelp, Menu, Moon, Search, Sun } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { CircleHelp, LogOut, Menu, Search, Settings } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { NAV_ITEMS } from "@/components/layout/nav-config";
 import { NotificationBell } from "@/components/layout/notification-bell";
-import { useTheme } from "@/hooks/use-theme";
+import { ThemeMenuItems, ThemeToggleButton } from "@/components/theme/theme-switcher";
 import { useProfile } from "@/hooks/use-profile";
 import { useAiEngineState } from "@/hooks/use-ai-engine-state";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AiStatusPill } from "@/components/brand/live-ai-orb";
 import { initialsOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -16,9 +25,9 @@ interface AppTopbarProps {
 
 export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
   const { pathname } = useLocation();
-  const { theme, toggleTheme } = useTheme();
   const { profile, org } = useProfile();
   const { state: aiState } = useAiEngineState();
+  const { signOut } = useAuthContext();
 
   const current =
     NAV_ITEMS.filter((item) => pathname === item.to || pathname.startsWith(`${item.to}/`)).sort(
@@ -80,14 +89,7 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
           <CircleHelp className="h-4 w-4" />
         </button>
 
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
+        <ThemeToggleButton />
 
         <button
           type="button"
@@ -102,13 +104,39 @@ export function AppTopbar({ onOpenMobileNav, onOpenPalette }: AppTopbarProps) {
           </span>
         </button>
 
-        <span
-          className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full bg-gradient-ai text-[11px] font-extrabold text-primary-foreground",
-          )}
-        >
-          {initialsOf(profile?.full_name)}
-        </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Account and appearance"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-ai text-[11px] font-extrabold text-primary-foreground"
+          >
+            {initialsOf(profile?.full_name)}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuLabel className="flex flex-col gap-0.5">
+              <span className="text-[13px] font-bold">{profile?.full_name ?? "Signed in"}</span>
+              <span className="truncate text-[11px] font-medium text-muted-foreground">
+                {profile?.email ?? ""}
+              </span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+              Theme
+            </DropdownMenuLabel>
+            <ThemeMenuItems />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/app/settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => void signOut()} className="flex items-center gap-2 text-destructive">
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

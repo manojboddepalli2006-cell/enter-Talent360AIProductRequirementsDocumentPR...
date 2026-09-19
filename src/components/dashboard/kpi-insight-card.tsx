@@ -29,14 +29,13 @@ const TONE_ICON: Record<string, string> = {
 };
 
 const TREND_COLOR: Record<string, string> = {
-  primary: "hsl(215 100% 56%)",
-  info: "hsl(189 100% 55%)",
-  accent: "hsl(253 100% 66%)",
-  warning: "hsl(38 92% 55%)",
-  danger: "hsl(0 84% 62%)",
-  success: "hsl(160 84% 45%)",
+  primary: "hsl(var(--chart-1))",
+  info: "hsl(var(--chart-2))",
+  accent: "hsl(var(--chart-3))",
+  warning: "hsl(var(--chart-4))",
+  danger: "hsl(var(--destructive))",
+  success: "hsl(var(--chart-5))",
 };
-
 export function KpiInsightCard({
   label,
   value,

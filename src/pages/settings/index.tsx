@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "@/hooks/use-session";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { useTheme } from "@/hooks/use-theme";
+import { ThemeSegmented } from "@/components/theme/theme-switcher";
 import { ROLE_LABELS } from "@/lib/domain";
 import { formatDate } from "@/lib/format";
 
@@ -21,7 +21,7 @@ export default function SettingsPage() {
   const { profile, org, employee } = useProfile();
   const { user } = useSession();
   const { signOut } = useAuthContext();
-  const { theme, toggleTheme } = useTheme();
+
 
   const [fullName, setFullName] = useState("");
   const [title, setTitle] = useState("");
@@ -153,10 +153,7 @@ export default function SettingsPage() {
 
           <ChartCard title="Appearance and session" subtitle="Dark mode applies to the whole application">
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" onClick={toggleTheme}>
-                {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-                Switch to {theme === "dark" ? "light" : "dark"} mode
-              </Button>
+              <ThemeSegmented className="w-full sm:w-auto" />
               <Button variant="soft-destructive" size="sm" onClick={() => void signOut()}>
                 <LogOut className="h-3.5 w-3.5" />
                 Sign out

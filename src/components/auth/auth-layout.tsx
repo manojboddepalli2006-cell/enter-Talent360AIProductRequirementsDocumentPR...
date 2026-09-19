@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { TalentLogo } from "@/components/brand/talent-logo";
 import { OrbitalBackground } from "@/components/brand/orbital-background";
+import { ThemeSegmented } from "@/components/theme/theme-switcher";
 
 interface AuthLayoutProps {
   title: string;
@@ -19,6 +20,11 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
   return (
     <div className="relative flex min-h-full w-full flex-col overflow-hidden bg-background lg:flex-row">
       <OrbitalBackground />
+
+      {/* The same global theme switch is available before sign-in. */}
+      <div className="absolute right-4 top-4 z-10 sm:right-6 sm:top-6">
+        <ThemeSegmented />
+      </div>
 
       {/* Brand panel */}
       <div className="relative flex w-full flex-col justify-between gap-10 border-b border-border p-8 lg:w-1/2 lg:border-b-0 lg:border-r lg:p-12">

@@ -279,7 +279,7 @@ export default function CommandCenterPage() {
               <AreaTrend
                 id="risk"
                 data={data.riskTrend}
-                color="hsl(253 100% 66%)"
+                color="hsl(var(--chart-3))"
                 axisLabel="Elevated risk"
               />
             ),

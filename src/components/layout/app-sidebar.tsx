@@ -9,9 +9,8 @@ import { useProfile } from "@/hooks/use-profile";
 import { useSession } from "@/hooks/use-session";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useAiEngineState } from "@/hooks/use-ai-engine-state";
-import { useTheme } from "@/hooks/use-theme";
+import { ThemeSegmented } from "@/components/theme/theme-switcher";
 import { AiStatusPill } from "@/components/brand/live-ai-orb";
-import { Monitor, Moon, Sun } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/domain";
 import { initialsOf } from "@/lib/format";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -37,7 +36,6 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
   const { user } = useSession();
   const { signOut } = useAuthContext();
   const { state: aiState } = useAiEngineState();
-  const { preference, setPreference } = useTheme();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     NAV_GROUPS.reduce<Record<string, boolean>>((acc, group) => {
@@ -179,42 +177,7 @@ export function AppSidebar({ collapsed, onToggleCollapse, onOpenPalette, onNavig
           <AiStatusPill state={aiState} className="w-full" />
         )}
 
-        {/* Theme preference */}
-        <div className="flex items-center gap-1 rounded-xl border border-border bg-card/40 p-1">
-          {([
-            { key: "dark", label: "Dark", icon: Moon },
-            { key: "light", label: "Light", icon: Sun },
-            { key: "system", label: "System", icon: Monitor },
-          ] as const).map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => setPreference(option.key)}
-              title={`${option.label} theme`}
-              aria-pressed={preference === option.key}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-[10.5px] font-bold transition-colors",
-                preference === option.key
-                  ? "bg-gradient-ai text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <option.icon className="h-3 w-3" />
-              {!collapsed ? option.label : null}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-elevated text-sidebar-foreground transition-colors hover:bg-sidebar-muted"
-          >
-            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </button>
-        </div>
+        <ThemeSegmented compact={collapsed} />
       </div>
 
       {/* User profile */}
